@@ -18,12 +18,25 @@ body {
   background-color: var(--background-color);
   color: #333;
   line-height: 1.6;
-  padding: 20px;
+  padding: clamp(12px, 2vw, 32px);
 }
 
 .container {
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
+}
+
+@media (min-width: 1600px) {
+  .container {
+    max-width: 88vw;
+  }
+}
+
+@media (min-width: 2200px) {
+  .container {
+    max-width: 82vw;
+  }
 }
 
 header {
@@ -113,14 +126,15 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
-  font-size: 13px;
+  font-size: clamp(12px, 0.85vw, 14px);
 }
 
 th,
 td {
   border: 1px solid var(--border-color);
-  padding: 10px 12px;
+  padding: clamp(8px, 0.7vw, 12px) clamp(8px, 0.8vw, 14px);
   text-align: right;
+  white-space: nowrap;
 }
 
 th {
@@ -251,6 +265,29 @@ tr:nth-child(even) {
 #printHeader,
 #printSignature {
   display: none;
+}
+
+@media (max-width: 640px) {
+  header h1 {
+    font-size: 19px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-actions {
+    flex-direction: column;
+  }
+
+  .mode-toggle {
+    width: 100%;
+  }
+
+  .mode-toggle button {
+    flex: 1;
+  }
 }
 
 @media print {
