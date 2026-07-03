@@ -81,7 +81,7 @@ function computeRow(row) {
   const bulan = row["Bulan"] || "-";
   const totalInvoice = parseFloat(row["Total Invoice"]) || 0;
 
-  const dppInvoice = Math.round(totalInvoice * 0.90089945);
+  const dppInvoice = Math.round(totalInvoice * 0.9);
   const pctCara1 = 0.04;
   const insentifReal1 = totalInvoice * pctCara1;
 
