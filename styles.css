@@ -254,6 +254,10 @@ tr:nth-child(even) {
 }
 
 @media print {
+  header {
+    display: none !important;
+  }
+
   @page {
     size: A4 landscape;
     margin: 10mm 8mm;
