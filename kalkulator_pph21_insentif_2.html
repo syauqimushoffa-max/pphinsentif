@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator PPh 21 Insentif Customer</title>
+    <style>
+        :root {
+            --primary-color: #1f4e78;
+            --secondary-color: #2c3e50;
+            --accent-color: #16a085;
+            --background-color: #f4f6f9;
+            --card-background: #ffffff;
+            --border-color: #d9d9d9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: var(--card-background);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #153552;
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+        }
+
+        .btn-accent:hover {
+            background-color: #117a65;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            text-align: right;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        td:first-child, th:first-child {
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fbfd;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #eaeded !important;
+        }
+
+        .highlight-green { background-color: #e2efda !important; }
+        .highlight-yellow { background-color: #ffe699 !important; }
+        .highlight-blue { background-color: #d9e1f2 !important; }
+        .highlight-orange { background-color: #fce4d6 !important; }
+
+        .rules-box {
+            background-color: #fcf8e3;
+            border-left: 4px solid #f0ad4e;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+        }
+
+        .rules-box h4 {
+            margin-bottom: 5px;
+            color: #8a6d3b;
+        }
+
+        .file-upload-box {
+            border: 2px dashed var(--primary-color);
+            padding: 30px;
+            text-align: center;
+            background: #f8faff;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .file-upload-box p {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .mode-toggle {
+            display: flex;
+            border: 1px solid var(--primary-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .mode-toggle button {
+            border: none;
+            background: white;
+            color: var(--primary-color);
+            padding: 9px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .mode-toggle button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .filter-box {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: #eef3f8;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        #printHeader, #printSignature {
+            display: none;
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm 8mm;
+            }
+
+            html, body {
+                padding: 0;
+                margin: 0;
+                background: white;
+                width: 100%;
+            }
+
+            .container {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            #printHeader {
+                display: block !important;
+            }
+
+            #printSignature {
+                display: block !important;
+                page-break-inside: avoid;
+            }
+
+            .card {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                margin-bottom: 0;
+            }
+
+            .table-responsive {
+                overflow: visible;
+            }
+
+            table {
+                width: 100%;
+                font-size: 9.5px;
+                table-layout: auto;
+                border-collapse: collapse;
+                page-break-inside: auto;
+            }
+
+            th, td {
+                padding: 4px 5px;
+                word-break: break-word;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            .total-row {
+                page-break-inside: avoid;
+            }
+
+            th {
+                background-color: #dddddd !important;
+                color: #000 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            #printHeader h2 {
+                font-size: 18px;
+            }
+
+            #printHeader h3 {
+                font-size: 13px;
+            }
+
+            #printHeader p {
+                font-size: 10px;
+            }
+        }
+    </style>
+    <!-- Menerapkan library SheetJS untuk membaca file Excel secara Client-Side -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>SISTEM KALKULATOR PPh 21 INSENTIF CUSTOMER</h1>
+        <p>Pengolahan Data Otomatis via File Excel (Mengikuti Regulasi PPh 21 Lapisan Progresif Orang Pribadi)</p>
+    </header>
+
+    <div class="rules-box">
+        <h4>Tarif Progresif PPh 21 (Bukan Pegawai - Tidak Berkesinambungan):</h4>
+        <p>Dasar Pengenaan Pajak (DPP PPh 21) = 50% &times; Insentif Tax</p>
+        <ul>
+            <li>0 s.d Rp 60 Juta: 5%</li>
+            <li>> Rp 60 Juta s.d Rp 250 Juta: 15%</li>
+            <li>> Rp 250 Juta s.d Rp 500 Juta: 25%</li>
+            <li>> Rp 500 Juta s.d Rp 5 Miliar: 30%</li>
+            <li>> Rp 5 Miliar: 35%</li>
+        </ul>
+    </div>
+
+    <div class="card no-print">
+        <h3>1. Unggah File Excel Anda</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+            Pastikan file Excel Anda memiliki kolom dengan header persis: <strong>Customer</strong>, <strong>Bulan</strong>, dan <strong>Total Invoice</strong>.
+        </p>
+        
+        <div class="file-upload-box" onclick="document.getElementById('excelFile').click()">
+            <p id="uploadStatus">Klik di sini untuk memilih atau drop file Excel (.xlsx / .xls)</p>
+            <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;" onchange="handleFile(event)">
+        </div>
+        
+        <button class="btn btn-accent" onclick="downloadTemplate()">Unduh Template Excel</button>
+    </div>
+
+    <!-- Kop surat, hanya tampil saat dicetak -->
+    <div id="printHeader">
+        <div style="text-align:center; border-bottom: 2px double #000; padding-bottom:6px; margin-bottom:10px;">
+            <h2 style="letter-spacing:1px; font-size:18px; margin:0;">CV. PANGAN BERKAH SENTOSA</h2>
+            <p style="font-size:10px; margin-top:2px;">Distribusi &amp; Pergudangan Cold Storage - Frozen Food Logistics</p>
+        </div>
+        <div style="text-align:center; margin-bottom:10px;">
+            <h3 style="text-decoration:underline; font-size:13px; margin:0;">LAPORAN PERHITUNGAN PPh 21 INSENTIF CUSTOMER</h3>
+            <p style="font-size:10px; margin-top:3px;">
+                Mode Tampilan: <strong id="printMode">-</strong>
+                &nbsp;|&nbsp; Filter Customer: <strong id="printFilter">Semua</strong>
+                &nbsp;|&nbsp; Dicetak pada: <strong id="printDate">-</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="card" id="resultCard" style="display: none;">
+        <h3 class="no-print">2. Hasil Perhitungan Otomatis</h3>
+
+        <div class="toolbar no-print">
+            <div class="mode-toggle">
+                <button id="btnModeDetail" class="active" onclick="setMode('detail')">Detail</button>
+                <button id="btnModeSummary" onclick="setMode('summary')">Summary</button>
+            </div>
+            <div class="filter-box" id="filterWrapper">
+                <input type="text" id="filterCustomer" placeholder="Cari nama customer..." oninput="renderTable()">
+            </div>
+            <div class="toolbar-actions">
+                <button class="btn btn-outline" onclick="exportToExcel()">Export ke Excel</button>
+                <button class="btn btn-accent" onclick="printReport()">Cetak / Print</button>
+            </div>
+        </div>
+
+        <!-- Tampilan DETAIL -->
+        <div id="detailView" class="table-responsive">
+            <table id="detailTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Customer</th>
+                        <th rowspan="2">Bulan</th>
+                        <th rowspan="2">Total Invoice</th>
+                        <th rowspan="2">DPP Invoice<br>(90.09%)</th>
+                        <th colspan="2">Cara Ke-1 (Dari Invoice)</th>
+                        <th colspan="2">Cara Ke-2 (Dari DPP)</th>
+                        <th colspan="2">Insentif Tax (1% dari DPP)</th>
+                        <th rowspan="2">PPh 21<br>(Progresif)</th>
+                        <th rowspan="2">Total Transfer<br>Tax</th>
+                        <th rowspan="2">Total Transfer<br>via Rek KTP</th>
+                    </tr>
+                    <tr>
+                        <th>%</th>
+                        <th>Jumlah Real</th>
+                        <th>%</th>
+                        <th>Jumlah Real</th>
+                        <th>%</th>
+                        <th>Jumlah</th>
+                    </tr>
+                </thead>
+                <tbody id="detailTableBody">
+                    <!-- Data dimasukkan via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tampilan SUMMARY (per customer) -->
+        <div id="summaryView" class="table-responsive" style="display:none;">
+            <table id="summaryTable">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Jumlah Bulan</th>
+                        <th>Total Invoice</th>
+                        <th>DPP Invoice</th>
+                        <th>Insentif Real<br>(Cara Ke-1)</th>
+                        <th>Insentif Real<br>(Cara Ke-2)</th>
+                        <th>Insentif Tax<br>(1% dari DPP)</th>
+                        <th>PPh 21<br>(Progresif)</th>
+                        <th>Total Transfer<br>Tax</th>
+                        <th>Total Transfer<br>via Rek KTP</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTableBody">
+                    <!-- Data dimasukkan via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Blok tanda tangan, hanya tampil saat dicetak -->
+        <div id="printSignature">
+            <table style="width:100%; border:none; margin-top:25px;">
+                <tr>
+                    <td style="border:none; text-align:center; width:33%; font-size:11px;">Dibuat Oleh,<br><br><br>( ................................. )</td>
+                    <td style="border:none; text-align:center; width:33%; font-size:11px;">Diperiksa Oleh,<br><br><br>( ................................. )</td>
+                    <td style="border:none; text-align:center; width:33%; font-size:11px;">Disetujui Oleh,<br><br><br>( ................................. )</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function formatIDR(number) {
+        return new Intl.NumberFormat('id-ID', { style: 'decimal', maximumFractionDigits: 0 }).format(number);
+    }
+
+    function downloadTemplate() {
+        const wb = XLSX.utils.book_new();
+        const ws_data = [
+            ["Customer", "Bulan", "Total Invoice"],
+            ["Toko Berkah", "Januari", 3841418100],
+            ["Toko Berkah", "Februari", 3761107900],
+            ["Toko Berkah", "Maret", 4460308800],
+            ["Sinar Jaya", "Januari", 1500000000],
+            ["Sinar Jaya", "Februari", 1200000000],
+            ["Sinar Jaya", "Maret", 1800000000]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, "Template");
+        XLSX.writeFile(wb, "Template_Kalkulator_Insentif.xlsx");
+    }
+
+    function handleFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        document.getElementById('uploadStatus').innerText = "File Berhasil Dimuat: " + file.name;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Mengubah ke JSON array of objects
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            prosesData(jsonData);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function hitungPPh21Progresif(dppPPh21) {
+        let pph = 0;
+        let sisa = dppPPh21;
+
+        // Lapisan 1: 0 - 60jt (5%)
+        if (sisa > 0) {
+            let porsi = Math.min(sisa, 60000000);
+            pph += porsi * 0.05;
+            sisa -= porsi;
+        }
+        // Lapisan 2: >60jt - 250jt (15%)
+        if (sisa > 0) {
+            let porsi = Math.min(sisa, 190000000); // 250jt - 60jt = 190jt
+            pph += porsi * 0.15;
+            sisa -= porsi;
+        }
+        // Lapisan 3: >250jt - 500jt (25%)
+        if (sisa > 0) {
+            let porsi = Math.min(sisa, 250000000); // 500jt - 250jt = 250jt
+            pph += porsi * 0.25;
+            sisa -= porsi;
+        }
+        // Lapisan 4: >500jt - 5M (30%)
+        if (sisa > 0) {
+            let porsi = Math.min(sisa, 4500000000); // 5M - 500jt = 4.5M
+            pph += porsi * 0.30;
+            sisa -= porsi;
+        }
+        // Lapisan 5: >5M (35%)
+        if (sisa > 0) {
+            pph += sisa * 0.35;
+        }
+
+        return pph;
+    }
+
+    // Data hasil perhitungan (per baris), disimpan secara global agar bisa dipakai ulang
+    // oleh mode Detail, mode Summary, filter, export, dan cetak.
+    let allData = [];
+    let currentMode = 'detail'; // 'detail' | 'summary'
+
+    function computeRow(row) {
+        const customer = row["Customer"] || "-";
+        const bulan = row["Bulan"] || "-";
+        const totalInvoice = parseFloat(row["Total Invoice"]) || 0;
+
+        // Perhitungan rumus dasar dari gambar
+        const dppInvoice = Math.round(totalInvoice * 0.90089945); // Rasio DPP dari Gambar (3.460.737.027 / 3.841.418.100)
+        const pctCara1 = 0.04; // 4%
+        const insentifReal1 = totalInvoice * pctCara1;
+
+        const pctCara2 = dppInvoice !== 0 ? insentifReal1 / dppInvoice : 0; // ~4.44%
+        const insentifReal2 = dppInvoice * pctCara2;
+
+        const pctTax = 0.01; // 1%
+        const insentifTax = dppInvoice * pctTax;
+
+        // PPh 21 Progresif: Dasar Pengenaan adalah 50% dari Insentif Tax
+        const dppPPh21 = 0.5 * insentifTax;
+        const pph21 = Math.round(hitungPPh21Progresif(dppPPh21));
+
+        const totalTransferTax = insentifTax - pph21;
+        const totalTransferKtp = insentifReal2 - insentifTax;
+
+        return {
+            customer, bulan, totalInvoice, dppInvoice,
+            pctCara1, insentifReal1, pctCara2, insentifReal2,
+            pctTax, insentifTax, pph21, totalTransferTax, totalTransferKtp
+        };
+    }
+
+    function prosesData(rows) {
+        if (rows.length === 0) {
+            alert("Data Excel kosong atau format tidak sesuai.");
+            return;
+        }
+
+        allData = rows.map(computeRow);
+
+        document.getElementById('resultCard').style.display = 'block';
+        document.getElementById('filterCustomer').value = '';
+        renderTable();
+    }
+
+    function getFilteredData() {
+        const filterVal = document.getElementById('filterCustomer').value.trim().toLowerCase();
+        if (!filterVal) return allData;
+        return allData.filter(d => d.customer.toLowerCase().includes(filterVal));
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('btnModeDetail').classList.toggle('active', mode === 'detail');
+        document.getElementById('btnModeSummary').classList.toggle('active', mode === 'summary');
+        document.getElementById('detailView').style.display = mode === 'detail' ? 'block' : 'none';
+        document.getElementById('summaryView').style.display = mode === 'summary' ? 'block' : 'none';
+        renderTable();
+    }
+
+    function renderTable() {
+        if (currentMode === 'detail') {
+            renderDetail();
+        } else {
+            renderSummary();
+        }
+    }
+
+    function renderDetail() {
+        const tbody = document.getElementById('detailTableBody');
+        tbody.innerHTML = '';
+        const data = getFilteredData();
+
+        let totalInv_All = 0, dppInv_All = 0, insReal1_All = 0, insReal2_All = 0, insTax_All = 0, pph21_All = 0, tfTax_All = 0, tfKtp_All = 0;
+
+        data.forEach(d => {
+            totalInv_All += d.totalInvoice;
+            dppInv_All += d.dppInvoice;
+            insReal1_All += d.insentifReal1;
+            insReal2_All += d.insentifReal2;
+            insTax_All += d.insentifTax;
+            pph21_All += d.pph21;
+            tfTax_All += d.totalTransferTax;
+            tfKtp_All += d.totalTransferKtp;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align:left;">${d.customer}</td>
+                <td style="text-align:left;">${d.bulan}</td>
+                <td>${formatIDR(d.totalInvoice)}</td>
+                <td>${formatIDR(d.dppInvoice)}</td>
+                <td style="text-align:center;">4.0%</td>
+                <td>${formatIDR(d.insentifReal1)}</td>
+                <td style="text-align:center;">${(d.pctCara2 * 100).toFixed(2)}%</td>
+                <td>${formatIDR(d.insentifReal2)}</td>
+                <td style="text-align:center;">1.0%</td>
+                <td>${formatIDR(d.insentifTax)}</td>
+                <td>${formatIDR(d.pph21)}</td>
+                <td>${formatIDR(d.totalTransferTax)}</td>
+                <td>${formatIDR(d.totalTransferKtp)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const totalTr = document.createElement('tr');
+        totalTr.className = 'total-row';
+        totalTr.innerHTML = `
+            <td colspan="2" style="text-align:center;">TOTAL KESELURUHAN</td>
+            <td>${formatIDR(totalInv_All)}</td>
+            <td>${formatIDR(dppInv_All)}</td>
+            <td>-</td>
+            <td class="highlight-green">${formatIDR(insReal1_All)}</td>
+            <td>-</td>
+            <td class="highlight-green">${formatIDR(insReal2_All)}</td>
+            <td>-</td>
+            <td>${formatIDR(insTax_All)}</td>
+            <td class="highlight-yellow">${formatIDR(pph21_All)}</td>
+            <td class="highlight-blue">${formatIDR(tfTax_All)}</td>
+            <td class="highlight-orange">${formatIDR(tfKtp_All)}</td>
+        `;
+        tbody.appendChild(totalTr);
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
+        }
+    }
+
+    function groupByCustomer(data) {
+        const map = new Map();
+        data.forEach(d => {
+            if (!map.has(d.customer)) {
+                map.set(d.customer, {
+                    customer: d.customer,
+                    bulanCount: 0,
+                    totalInvoice: 0, dppInvoice: 0,
+                    insentifReal1: 0, insentifReal2: 0,
+                    insentifTax: 0, pph21: 0,
+                    totalTransferTax: 0, totalTransferKtp: 0
+                });
+            }
+            const g = map.get(d.customer);
+            g.bulanCount += 1;
+            g.totalInvoice += d.totalInvoice;
+            g.dppInvoice += d.dppInvoice;
+            g.insentifReal1 += d.insentifReal1;
+            g.insentifReal2 += d.insentifReal2;
+            g.insentifTax += d.insentifTax;
+            g.pph21 += d.pph21;
+            g.totalTransferTax += d.totalTransferTax;
+            g.totalTransferKtp += d.totalTransferKtp;
+        });
+        return Array.from(map.values());
+    }
+
+    function renderSummary() {
+        const tbody = document.getElementById('summaryTableBody');
+        tbody.innerHTML = '';
+        const data = getFilteredData();
+        const groups = groupByCustomer(data);
+
+        let totalInv_All = 0, dppInv_All = 0, insReal1_All = 0, insReal2_All = 0, insTax_All = 0, pph21_All = 0, tfTax_All = 0, tfKtp_All = 0;
+
+        groups.forEach(g => {
+            totalInv_All += g.totalInvoice;
+            dppInv_All += g.dppInvoice;
+            insReal1_All += g.insentifReal1;
+            insReal2_All += g.insentifReal2;
+            insTax_All += g.insentifTax;
+            pph21_All += g.pph21;
+            tfTax_All += g.totalTransferTax;
+            tfKtp_All += g.totalTransferKtp;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align:left;">${g.customer}</td>
+                <td style="text-align:center;">${g.bulanCount}</td>
+                <td>${formatIDR(g.totalInvoice)}</td>
+                <td>${formatIDR(g.dppInvoice)}</td>
+                <td>${formatIDR(g.insentifReal1)}</td>
+                <td>${formatIDR(g.insentifReal2)}</td>
+                <td>${formatIDR(g.insentifTax)}</td>
+                <td>${formatIDR(g.pph21)}</td>
+                <td>${formatIDR(g.totalTransferTax)}</td>
+                <td>${formatIDR(g.totalTransferKtp)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const totalTr = document.createElement('tr');
+        totalTr.className = 'total-row';
+        totalTr.innerHTML = `
+            <td style="text-align:center;">TOTAL KESELURUHAN</td>
+            <td>-</td>
+            <td>${formatIDR(totalInv_All)}</td>
+            <td>${formatIDR(dppInv_All)}</td>
+            <td class="highlight-green">${formatIDR(insReal1_All)}</td>
+            <td class="highlight-green">${formatIDR(insReal2_All)}</td>
+            <td>${formatIDR(insTax_All)}</td>
+            <td class="highlight-yellow">${formatIDR(pph21_All)}</td>
+            <td class="highlight-blue">${formatIDR(tfTax_All)}</td>
+            <td class="highlight-orange">${formatIDR(tfKtp_All)}</td>
+        `;
+        tbody.appendChild(totalTr);
+
+        if (groups.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
+        }
+    }
+
+    function exportToExcel() {
+        if (allData.length === 0) {
+            alert("Belum ada data untuk diexport. Silakan unggah file Excel terlebih dahulu.");
+            return;
+        }
+        const tableId = currentMode === 'detail' ? 'detailTable' : 'summaryTable';
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.table_to_sheet(document.getElementById(tableId));
+        XLSX.utils.book_append_sheet(wb, ws, currentMode === 'detail' ? 'Detail' : 'Summary');
+
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10);
+        XLSX.writeFile(wb, `Laporan_Insentif_${currentMode === 'detail' ? 'Detail' : 'Summary'}_${dateStr}.xlsx`);
+    }
+
+    function printReport() {
+        if (allData.length === 0) {
+            alert("Belum ada data untuk dicetak. Silakan unggah file Excel terlebih dahulu.");
+            return;
+        }
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+        document.getElementById('printDate').innerText = dateStr;
+        document.getElementById('printMode').innerText = currentMode === 'detail' ? 'Detail' : 'Summary (per Customer)';
+        const filterVal = document.getElementById('filterCustomer').value.trim();
+        document.getElementById('printFilter').innerText = filterVal ? filterVal : 'Semua';
+
+        window.print();
+    }
+</script>
+
+</body>
+</html>
