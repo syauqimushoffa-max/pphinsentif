@@ -76,11 +76,11 @@ function hitungPPh21Progresif(dppPPh21) {
 // Menentukan persentase Cara Ke-1 berdasarkan total tonase pembelian customer
 function tonaseToPct(tonase) {
   const t = parseFloat(tonase) || 0;
-  if (t >= 10) return 0.03;
-  if (t >= 8) return 0.025;
-  if (t >= 6) return 0.02;
-  if (t >= 4) return 0.015;
-  if (t >= 2) return 0.01;
+  if (t >= 10000) return 0.03;
+  if (t >= 8000) return 0.025;
+  if (t >= 6000) return 0.02;
+  if (t >= 4000) return 0.015;
+  if (t >= 2000) return 0.01;
   return 0;
 }
 
