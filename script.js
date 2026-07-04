@@ -106,6 +106,7 @@ function computeRow(row) {
   // sehingga PPh 21 dan total transfer terkait juga tidak perlu dihitung (= 0).
   const eligibleTax = tonase >= 2;
 
+  const pctTaxDisplay = eligibleTax ? pctTax : 0;
   const insentifTax = eligibleTax ? dppInvoice * pctTax : 0;
   const dppPPh21 = 0.5 * insentifTax;
   const pph21 = eligibleTax ? Math.round(hitungPPh21Progresif(dppPPh21)) : 0;
@@ -123,7 +124,7 @@ function computeRow(row) {
     insentifReal1,
     pctCara2,
     insentifReal2,
-    pctTax,
+    pctTax: pctTaxDisplay,
     insentifTax,
     pph21,
     totalTransferTax,
@@ -213,7 +214,7 @@ function renderDetail() {
                 <td>${formatIDR(d.insentifReal1)}</td>
                 <td style="text-align:center;">${(d.pctCara2 * 100).toFixed(2)}%</td>
                 <td>${formatIDR(d.insentifReal2)}</td>
-                <td style="text-align:center;">1.0%</td>
+                <td style="text-align:center;">${(d.pctTax * 100).toFixed(2)}%</td>
                 <td>${formatIDR(d.insentifTax)}</td>
                 <td>${formatIDR(d.pph21)}</td>
                 <td>${formatIDR(d.totalTransferTax)}</td>
