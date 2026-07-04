@@ -140,7 +140,7 @@ function computeRow(row) {
   const pph21 = eligibleTax ? Math.round(hitungPPh21Progresif(dppPPh21)) : 0;
 
   const totalTransferTax = eligibleTax ? insentifTax - pph21 : 0;
-  const totalTransferKtp = eligibleTax ? insentifReal2 - insentifTax : 0;
+  const totalTransferKtp = eligibleTax ? insentifTax : 0;
 
   return {
     customer,
