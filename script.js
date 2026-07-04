@@ -101,13 +101,17 @@ function computeRow(row) {
   const insentifReal2 = dppInvoice * pctCara2;
 
   const pctTax = 0.01;
-  const insentifTax = dppInvoice * pctTax;
 
+  // Jika tonase belum mencapai 2 ton, customer tidak berhak atas insentif tax,
+  // sehingga PPh 21 dan total transfer terkait juga tidak perlu dihitung (= 0).
+  const eligibleTax = tonase >= 2;
+
+  const insentifTax = eligibleTax ? dppInvoice * pctTax : 0;
   const dppPPh21 = 0.5 * insentifTax;
-  const pph21 = Math.round(hitungPPh21Progresif(dppPPh21));
+  const pph21 = eligibleTax ? Math.round(hitungPPh21Progresif(dppPPh21)) : 0;
 
-  const totalTransferTax = insentifTax - pph21;
-  const totalTransferKtp = insentifReal2 - insentifTax;
+  const totalTransferTax = eligibleTax ? insentifTax - pph21 : 0;
+  const totalTransferKtp = eligibleTax ? insentifReal2 - insentifTax : 0;
 
   return {
     customer,
