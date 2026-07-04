@@ -8,13 +8,13 @@ function formatIDR(number) {
 function downloadTemplate() {
   const wb = XLSX.utils.book_new();
   const ws_data = [
-    ["Customer", "Bulan", "Total Invoice"],
-    ["Toko Berkah", "Januari", 3841418100],
-    ["Toko Berkah", "Februari", 3761107900],
-    ["Toko Berkah", "Maret", 4460308800],
-    ["Sinar Jaya", "Januari", 1500000000],
-    ["Sinar Jaya", "Februari", 1200000000],
-    ["Sinar Jaya", "Maret", 1800000000],
+    ["Customer", "Bulan", "Total Invoice", "Tonase"],
+    ["Toko Berkah", "Januari", 3841418100, 4.5],
+    ["Toko Berkah", "Februari", 3761107900, 3.2],
+    ["Toko Berkah", "Maret", 4460308800, 6.8],
+    ["Sinar Jaya", "Januari", 1500000000, 2.5],
+    ["Sinar Jaya", "Februari", 1200000000, 8.1],
+    ["Sinar Jaya", "Maret", 1800000000, 10.5],
   ];
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
   XLSX.utils.book_append_sheet(wb, ws, "Template");
@@ -73,6 +73,17 @@ function hitungPPh21Progresif(dppPPh21) {
   return pph;
 }
 
+// Menentukan persentase Cara Ke-1 berdasarkan total tonase pembelian customer
+function tonaseToPct(tonase) {
+  const t = parseFloat(tonase) || 0;
+  if (t >= 10) return 0.03;
+  if (t >= 8) return 0.025;
+  if (t >= 6) return 0.02;
+  if (t >= 4) return 0.015;
+  if (t >= 2) return 0.01;
+  return 0;
+}
+
 let allData = [];
 let currentMode = "detail";
 
@@ -80,9 +91,10 @@ function computeRow(row) {
   const customer = row["Customer"] || "-";
   const bulan = row["Bulan"] || "-";
   const totalInvoice = parseFloat(row["Total Invoice"]) || 0;
+  const tonase = parseFloat(row["Tonase"]) || 0;
 
-  const dppInvoice = Math.round(totalInvoice * 0.900900900922559264 );
-  const pctCara1 = 0.04;
+  const dppInvoice = Math.round(totalInvoice * 0.900900900922559264);
+  const pctCara1 = tonaseToPct(tonase);
   const insentifReal1 = totalInvoice * pctCara1;
 
   const pctCara2 = dppInvoice !== 0 ? insentifReal1 / dppInvoice : 0;
@@ -101,6 +113,7 @@ function computeRow(row) {
     customer,
     bulan,
     totalInvoice,
+    tonase,
     dppInvoice,
     pctCara1,
     insentifReal1,
@@ -171,7 +184,8 @@ function renderDetail() {
     insTax_All = 0,
     pph21_All = 0,
     tfTax_All = 0,
-    tfKtp_All = 0;
+    tfKtp_All = 0,
+    tonase_All = 0;
 
   data.forEach((d) => {
     totalInv_All += d.totalInvoice;
@@ -182,14 +196,16 @@ function renderDetail() {
     pph21_All += d.pph21;
     tfTax_All += d.totalTransferTax;
     tfKtp_All += d.totalTransferKtp;
+    tonase_All += d.tonase;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
                 <td style="text-align:left;">${d.customer}</td>
                 <td style="text-align:left;">${d.bulan}</td>
                 <td>${formatIDR(d.totalInvoice)}</td>
+                <td style="text-align:center;">${d.tonase.toLocaleString("id-ID")} ton</td>
                 <td>${formatIDR(d.dppInvoice)}</td>
-                <td style="text-align:center;">4.0%</td>
+                <td style="text-align:center;">${(d.pctCara1 * 100).toFixed(2)}%</td>
                 <td>${formatIDR(d.insentifReal1)}</td>
                 <td style="text-align:center;">${(d.pctCara2 * 100).toFixed(2)}%</td>
                 <td>${formatIDR(d.insentifReal2)}</td>
@@ -207,6 +223,7 @@ function renderDetail() {
   totalTr.innerHTML = `
             <td colspan="2" style="text-align:center;">TOTAL KESELURUHAN</td>
             <td>${formatIDR(totalInv_All)}</td>
+            <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")} ton</td>
             <td>${formatIDR(dppInv_All)}</td>
             <td>-</td>
             <td class="highlight-green">${formatIDR(insReal1_All)}</td>
@@ -221,7 +238,7 @@ function renderDetail() {
   tbody.appendChild(totalTr);
 
   if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
   }
 }
 
@@ -233,6 +250,7 @@ function groupByCustomer(data) {
         customer: d.customer,
         bulanCount: 0,
         totalInvoice: 0,
+        tonase: 0,
         dppInvoice: 0,
         insentifReal1: 0,
         insentifReal2: 0,
@@ -245,6 +263,7 @@ function groupByCustomer(data) {
     const g = map.get(d.customer);
     g.bulanCount += 1;
     g.totalInvoice += d.totalInvoice;
+    g.tonase += d.tonase;
     g.dppInvoice += d.dppInvoice;
     g.insentifReal1 += d.insentifReal1;
     g.insentifReal2 += d.insentifReal2;
@@ -269,7 +288,8 @@ function renderSummary() {
     insTax_All = 0,
     pph21_All = 0,
     tfTax_All = 0,
-    tfKtp_All = 0;
+    tfKtp_All = 0,
+    tonase_All = 0;
 
   groups.forEach((g) => {
     totalInv_All += g.totalInvoice;
@@ -280,12 +300,14 @@ function renderSummary() {
     pph21_All += g.pph21;
     tfTax_All += g.totalTransferTax;
     tfKtp_All += g.totalTransferKtp;
+    tonase_All += g.tonase;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
                 <td style="text-align:left;">${g.customer}</td>
                 <td style="text-align:center;">${g.bulanCount}</td>
                 <td>${formatIDR(g.totalInvoice)}</td>
+                <td style="text-align:center;">${g.tonase.toLocaleString("id-ID")} ton</td>
                 <td>${formatIDR(g.dppInvoice)}</td>
                 <td>${formatIDR(g.insentifReal1)}</td>
                 <td>${formatIDR(g.insentifReal2)}</td>
@@ -303,6 +325,7 @@ function renderSummary() {
             <td style="text-align:center;">TOTAL KESELURUHAN</td>
             <td>-</td>
             <td>${formatIDR(totalInv_All)}</td>
+            <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")} ton</td>
             <td>${formatIDR(dppInv_All)}</td>
             <td class="highlight-green">${formatIDR(insReal1_All)}</td>
             <td class="highlight-green">${formatIDR(insReal2_All)}</td>
@@ -314,7 +337,7 @@ function renderSummary() {
   tbody.appendChild(totalTr);
 
   if (groups.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
   }
 }
 
