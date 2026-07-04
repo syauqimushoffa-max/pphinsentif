@@ -76,9 +76,7 @@ function hitungPPh21Progresif(dppPPh21) {
 // Mencari nama kolom di baris Excel secara fleksibel (tidak peduli huruf besar/kecil atau spasi ekstra)
 function getFieldValue(row, targetName) {
   const target = targetName.trim().toLowerCase();
-  const key = Object.keys(row).find(
-    (k) => k.trim().toLowerCase() === target,
-  );
+  const key = Object.keys(row).find((k) => k.trim().toLowerCase() === target);
   return key !== undefined ? row[key] : undefined;
 }
 
@@ -106,11 +104,11 @@ function parseNumberID(value) {
 // Menentukan persentase Cara Ke-1 berdasarkan total tonase pembelian customer
 function tonaseToPct(tonase) {
   const t = parseFloat(tonase) || 0;
-  if (t >= 10) return 0.03;
-  if (t >= 8) return 0.025;
-  if (t >= 6) return 0.02;
-  if (t >= 4) return 0.015;
-  if (t >= 2) return 0.01;
+  if (t >= 10000) return 0.03;
+  if (t >= 8000) return 0.025;
+  if (t >= 6000) return 0.02;
+  if (t >= 4000) return 0.015;
+  if (t >= 2000) return 0.01;
   return 0;
 }
 
@@ -123,7 +121,7 @@ function computeRow(row) {
   const totalInvoice = parseNumberID(getFieldValue(row, "Total Invoice"));
   const tonase = parseNumberID(getFieldValue(row, "Tonase"));
 
-  const dppInvoice = Math.round(totalInvoice * 0.900900900922559264 );
+  const dppInvoice = Math.round(totalInvoice * 0.900900900922559264);
   const pctCara1 = tonaseToPct(tonase);
   const insentifReal1 = totalInvoice * pctCara1;
 
@@ -168,8 +166,7 @@ function prosesData(rows) {
     return;
   }
 
-  const tonaseMissing =
-    getFieldValue(rows[0], "Tonase") === undefined;
+  const tonaseMissing = getFieldValue(rows[0], "Tonase") === undefined;
   if (tonaseMissing) {
     alert(
       'Kolom "Tonase" tidak ditemukan di file Excel Anda. Pastikan ada kolom dengan header persis "Tonase", jika tidak semua persentase Cara Ke-1 akan dihitung 0%.',
