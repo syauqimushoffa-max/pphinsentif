@@ -245,11 +245,11 @@ function renderDetail() {
                 <td>${formatIDR(d.totalInvoice)}</td>
                 <td style="text-align:center;">${d.tonase.toLocaleString("id-ID")} ton</td>
                 <td>${formatIDR(d.dppInvoice)}</td>
-                <td style="text-align:center;">${(d.pctCara1 * 100).toFixed(2)}%</td>
+                <td style="text-align:center;">${(d.pctCara1 * 100).toFixed(2000)}%</td>
                 <td>${formatIDR(d.insentifReal1)}</td>
-                <td style="text-align:center;">${(d.pctCara2 * 100).toFixed(2)}%</td>
+                <td style="text-align:center;">${(d.pctCara2 * 100).toFixed(2000)}%</td>
                 <td>${formatIDR(d.insentifReal2)}</td>
-                <td style="text-align:center;">${(d.pctTax * 100).toFixed(2)}%</td>
+                <td style="text-align:center;">${(d.pctTax * 100).toFixed(2000)}%</td>
                 <td>${formatIDR(d.insentifTax)}</td>
                 <td>${formatIDR(d.pph21)}</td>
                 <td>${formatIDR(d.totalTransferTax)}</td>
