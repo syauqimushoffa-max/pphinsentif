@@ -25,7 +25,15 @@
 
         <div class="rules-box">
           <h4>Tarif Progresif PPh 21</h4>
-          <p>Dasar Pengenaan Pajak (DPP PPh 21) = 50% &times; Insentif Tax</p>
+          <p>
+            PPh 21 dihitung <strong>kumulatif per Customer</strong> (bukan per
+            bulan). Insentif Tax dari seluruh bulan milik satu customer
+            dijumlahkan terlebih dahulu, baru dihitung DPP dan tarifnya.
+          </p>
+          <p>
+            Dasar Pengenaan Pajak (DPP PPh 21) = 50% &times; Total Insentif Tax
+            (kumulatif per Customer)
+          </p>
           <ul>
             <li>0 s.d Rp 60 Juta: 5%</li>
             <li>> Rp 60 Juta s.d Rp 250 Juta: 15%</li>
@@ -33,6 +41,11 @@
             <li>> Rp 500 Juta s.d Rp 5 Miliar: 30%</li>
             <li>> Rp 5 Miliar: 35%</li>
           </ul>
+          <p style="margin-top: 8px; font-size: 12.5px; color: #8a6d3b">
+            Kolom PPh 21, Total Transfer Tax, dan Total Transfer via Rek KTP di
+            tampilan Detail akan digabung (merge) per customer sesuai jumlah
+            bulan datanya.
+          </p>
         </div>
 
         <div
@@ -125,7 +138,7 @@
                 <th colspan="2">Cara Ke-1 (Dari Invoice)</th>
                 <th colspan="2">Cara Ke-2 (Dari DPP)</th>
                 <th colspan="2">Insentif Tax (1% dari DPP)</th>
-                <th rowspan="2">PPh 21<br />(Progresif)</th>
+                <th rowspan="2">PPh 21<br />(Progresif, Kumulatif)</th>
                 <th rowspan="2">Total Transfer<br />Tax</th>
                 <th rowspan="2">Total Transfer<br />via Rek KTP</th>
               </tr>

@@ -101,9 +101,6 @@ function parseNumberID(value) {
   return isNaN(num) ? 0 : num;
 }
 
-// Batas minimum tonase (dalam ton) agar customer berhak atas seluruh insentif
-const TONASE_ELIGIBLE_MIN = 2000;
-
 // Menentukan persentase Cara Ke-1 berdasarkan total tonase pembelian customer
 function tonaseToPct(tonase) {
   const t = parseFloat(tonase) || 0;
@@ -115,6 +112,11 @@ function tonaseToPct(tonase) {
   return 0;
 }
 
+// Ambang batas tonase minimum agar berhak atas Insentif Tax (dan turunannya:
+// PPh 21, Total Transfer Tax, Total Transfer via Rek KTP). Satu konstanta ini
+// dipakai di seluruh perhitungan supaya tidak ada selisih logika antar field.
+const TONASE_ELIGIBLE_MIN = 2000;
+
 let allData = [];
 let currentMode = "detail";
 
@@ -125,27 +127,21 @@ function computeRow(row) {
   const tonase = parseNumberID(getFieldValue(row, "Tonase"));
 
   const dppInvoice = Math.round(totalInvoice * 0.900900900922559264);
+  const pctCara1 = tonaseToPct(tonase);
+  const insentifReal1 = totalInvoice * pctCara1;
 
-  // Jika tonase belum mencapai batas minimum (2000 ton), customer tidak berhak
-  // atas Cara Ke-1, Cara Ke-2, Insentif Tax, PPh 21, dan Total Transfer terkait,
-  // sehingga semuanya dihitung 0.
-  const eligible = tonase >= TONASE_ELIGIBLE_MIN;
-
-  const pctCara1 = eligible ? tonaseToPct(tonase) : 0;
-  const insentifReal1 = eligible ? totalInvoice * pctCara1 : 0;
-
-  const pctCara2 =
-    eligible && dppInvoice !== 0 ? insentifReal1 / dppInvoice : 0;
-  const insentifReal2 = eligible ? dppInvoice * pctCara2 : 0;
+  const pctCara2 = dppInvoice !== 0 ? insentifReal1 / dppInvoice : 0;
+  const insentifReal2 = dppInvoice * pctCara2;
 
   const pctTax = 0.01;
-  const pctTaxDisplay = eligible ? pctTax : 0;
-  const insentifTax = eligible ? dppInvoice * pctTax : 0;
-  const dppPPh21 = 0.5 * insentifTax;
-  const pph21 = eligible ? Math.round(hitungPPh21Progresif(dppPPh21)) : 0;
 
-  const totalTransferTax = eligible ? insentifTax - pph21 : 0;
-  const totalTransferKtp = eligible ? insentifTax : 0;
+  // Customer berhak atas insentif tax hanya jika tonase bulan tsb sudah
+  // mencapai TONASE_ELIGIBLE_MIN. Jika belum, Insentif Tax bulan itu = 0
+  // (otomatis tidak ikut menambah akumulasi PPh 21 milik customer tsb).
+  const eligibleTax = tonase >= TONASE_ELIGIBLE_MIN;
+
+  const pctTaxDisplay = eligibleTax ? pctTax : 0;
+  const insentifTax = eligibleTax ? dppInvoice * pctTax : 0;
 
   return {
     customer,
@@ -159,10 +155,68 @@ function computeRow(row) {
     insentifReal2,
     pctTax: pctTaxDisplay,
     insentifTax,
-    pph21,
-    totalTransferTax,
-    totalTransferKtp,
+    // pph21, totalTransferTax, dan totalTransferKtp dihitung secara kumulatif
+    // per customer oleh computeCustomerTax() setelah semua baris diproses,
+    // jadi nilainya sementara diisi 0 dulu di sini.
+    pph21: 0,
+    totalTransferTax: 0,
+    totalTransferKtp: 0,
+    _groupRowCount: 1,
+    _isGroupFirst: true,
   };
+}
+
+// Mengurutkan data supaya baris-baris milik customer yang sama berdekatan
+// (diperlukan agar sel PPh 21 / Total Transfer bisa digabung / rowspan di
+// tampilan Detail). Urutan customer mengikuti kemunculan pertama di Excel,
+// dan urutan bulan di dalam satu customer tetap sesuai urutan asli.
+function sortByCustomerGroup(data) {
+  const order = [];
+  const seen = new Set();
+  data.forEach((d) => {
+    if (!seen.has(d.customer)) {
+      seen.add(d.customer);
+      order.push(d.customer);
+    }
+  });
+  const orderIndex = new Map(order.map((c, i) => [c, i]));
+  return [...data].sort(
+    (a, b) => orderIndex.get(a.customer) - orderIndex.get(b.customer),
+  );
+}
+
+// Menghitung PPh 21 secara KUMULATIF per customer:
+// 1. Insentif Tax dari seluruh bulan milik satu customer dijumlahkan dulu.
+// 2. DPP PPh 21 = 50% x total Insentif Tax kumulatif tsb.
+// 3. Tarif progresif dikenakan ke DPP tsb (bertingkat, sesuai lapisan tarif).
+// Hasil pph21 / totalTransferTax / totalTransferKtp akan SAMA untuk semua
+// baris/bulan milik customer yang sama, dan ditandai (_isGroupFirst,
+// _groupRowCount) supaya bisa digabung (merge) saat dirender.
+function computeCustomerTax(data) {
+  const groups = new Map();
+  data.forEach((d, idx) => {
+    if (!groups.has(d.customer)) groups.set(d.customer, []);
+    groups.get(d.customer).push(idx);
+  });
+
+  groups.forEach((indices) => {
+    const totalInsentifTax = indices.reduce(
+      (sum, i) => sum + data[i].insentifTax,
+      0,
+    );
+    const dppPPh21Group = 0.5 * totalInsentifTax;
+    const pph21Group = Math.round(hitungPPh21Progresif(dppPPh21Group));
+    const totalTransferTaxGroup = totalInsentifTax - pph21Group;
+    const totalTransferKtpGroup = totalInsentifTax;
+
+    indices.forEach((i, pos) => {
+      data[i].pph21 = pph21Group;
+      data[i].totalTransferTax = totalTransferTaxGroup;
+      data[i].totalTransferKtp = totalTransferKtpGroup;
+      data[i]._groupRowCount = indices.length;
+      data[i]._isGroupFirst = pos === 0;
+    });
+  });
 }
 
 function prosesData(rows) {
@@ -178,7 +232,10 @@ function prosesData(rows) {
     );
   }
 
-  allData = rows.map(computeRow);
+  let computed = rows.map(computeRow);
+  computed = sortByCustomerGroup(computed);
+  computeCustomerTax(computed);
+  allData = computed;
 
   document.getElementById("resultCard").style.display = "block";
   document.getElementById("filterCustomer").value = "";
@@ -238,10 +295,29 @@ function renderDetail() {
     insReal1_All += d.insentifReal1;
     insReal2_All += d.insentifReal2;
     insTax_All += d.insentifTax;
-    pph21_All += d.pph21;
-    tfTax_All += d.totalTransferTax;
-    tfKtp_All += d.totalTransferKtp;
     tonase_All += d.tonase;
+
+    // pph21 / totalTransferTax / totalTransferKtp adalah nilai KUMULATIF per
+    // customer (sama untuk setiap baris/bulan milik customer tsb), jadi hanya
+    // dihitung sekali per customer (saat baris pertama grup) supaya tidak
+    // dobel-hitung di total keseluruhan.
+    if (d._isGroupFirst) {
+      pph21_All += d.pph21;
+      tfTax_All += d.totalTransferTax;
+      tfKtp_All += d.totalTransferKtp;
+    }
+
+    // Sel PPh 21 / Total Transfer Tax / Total Transfer via Rek KTP digabung
+    // (rowspan) sesuai jumlah bulan milik customer tsb. Hanya baris pertama
+    // dari grup customer yang merender ketiga sel ini.
+    let mergedCells = "";
+    if (d._isGroupFirst) {
+      mergedCells = `
+                <td rowspan="${d._groupRowCount}">${formatIDR(d.pph21)}</td>
+                <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferTax)}</td>
+                <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferKtp)}</td>
+            `;
+    }
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -256,9 +332,7 @@ function renderDetail() {
                 <td>${formatIDR(d.insentifReal2)}</td>
                 <td style="text-align:center;">${(d.pctTax * 100).toFixed(2)}%</td>
                 <td>${formatIDR(d.insentifTax)}</td>
-                <td>${formatIDR(d.pph21)}</td>
-                <td>${formatIDR(d.totalTransferTax)}</td>
-                <td>${formatIDR(d.totalTransferKtp)}</td>
+                ${mergedCells}
             `;
     tbody.appendChild(tr);
   });
@@ -313,9 +387,12 @@ function groupByCustomer(data) {
     g.insentifReal1 += d.insentifReal1;
     g.insentifReal2 += d.insentifReal2;
     g.insentifTax += d.insentifTax;
-    g.pph21 += d.pph21;
-    g.totalTransferTax += d.totalTransferTax;
-    g.totalTransferKtp += d.totalTransferKtp;
+    // pph21 / totalTransferTax / totalTransferKtp sudah berupa nilai kumulatif
+    // per customer (dihitung sekali di computeCustomerTax), jadi cukup
+    // di-assign (bukan dijumlahkan per baris) supaya tidak dobel-hitung.
+    g.pph21 = d.pph21;
+    g.totalTransferTax = d.totalTransferTax;
+    g.totalTransferKtp = d.totalTransferKtp;
   });
   return Array.from(map.values());
 }
