@@ -207,7 +207,7 @@ function computeCustomerTax(data) {
     const dppPPh21Group = 0.5 * totalInsentifTax;
     const pph21Group = Math.round(hitungPPh21Progresif(dppPPh21Group));
     const totalTransferTaxGroup = totalInsentifTax - pph21Group;
-    const totalTransferKtpGroup = totalInsentifTax;
+    const totalTransferKtpGroup = insentifReal2 - totalInsentifTax;
 
     indices.forEach((i, pos) => {
       data[i].pph21 = pph21Group;
