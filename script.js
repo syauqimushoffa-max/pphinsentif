@@ -101,6 +101,9 @@ function parseNumberID(value) {
   return isNaN(num) ? 0 : num;
 }
 
+// Batas minimum tonase (dalam ton) agar customer berhak atas seluruh insentif
+const TONASE_ELIGIBLE_MIN = 2000;
+
 // Menentukan persentase Cara Ke-1 berdasarkan total tonase pembelian customer
 function tonaseToPct(tonase) {
   const t = parseFloat(tonase) || 0;
@@ -122,25 +125,27 @@ function computeRow(row) {
   const tonase = parseNumberID(getFieldValue(row, "Tonase"));
 
   const dppInvoice = Math.round(totalInvoice * 0.900900900922559264);
-  const pctCara1 = tonaseToPct(tonase);
-  const insentifReal1 = totalInvoice * pctCara1;
 
-  const pctCara2 = dppInvoice !== 0 ? insentifReal1 / dppInvoice : 0;
-  const insentifReal2 = dppInvoice * pctCara2;
+  // Jika tonase belum mencapai batas minimum (2000 ton), customer tidak berhak
+  // atas Cara Ke-1, Cara Ke-2, Insentif Tax, PPh 21, dan Total Transfer terkait,
+  // sehingga semuanya dihitung 0.
+  const eligible = tonase >= TONASE_ELIGIBLE_MIN;
+
+  const pctCara1 = eligible ? tonaseToPct(tonase) : 0;
+  const insentifReal1 = eligible ? totalInvoice * pctCara1 : 0;
+
+  const pctCara2 =
+    eligible && dppInvoice !== 0 ? insentifReal1 / dppInvoice : 0;
+  const insentifReal2 = eligible ? dppInvoice * pctCara2 : 0;
 
   const pctTax = 0.01;
-
-  // Jika tonase belum mencapai 2 ton, customer tidak berhak atas insentif tax,
-  // sehingga PPh 21 dan total transfer terkait juga tidak perlu dihitung (= 0).
-  const eligibleTax = tonase >= 2;
-
-  const pctTaxDisplay = eligibleTax ? pctTax : 0;
-  const insentifTax = eligibleTax ? dppInvoice * pctTax : 0;
+  const pctTaxDisplay = eligible ? pctTax : 0;
+  const insentifTax = eligible ? dppInvoice * pctTax : 0;
   const dppPPh21 = 0.5 * insentifTax;
-  const pph21 = eligibleTax ? Math.round(hitungPPh21Progresif(dppPPh21)) : 0;
+  const pph21 = eligible ? Math.round(hitungPPh21Progresif(dppPPh21)) : 0;
 
-  const totalTransferTax = eligibleTax ? insentifTax - pph21 : 0;
-  const totalTransferKtp = eligibleTax ? insentifTax : 0;
+  const totalTransferTax = eligible ? insentifTax - pph21 : 0;
+  const totalTransferKtp = eligible ? insentifTax : 0;
 
   return {
     customer,
