@@ -204,10 +204,16 @@ function computeCustomerTax(data) {
       (sum, i) => sum + data[i].insentifTax,
       0,
     );
+    const totalInsentifReal2 = indices.reduce(
+      (sum, i) => sum + data[i].insentifReal2,
+      0,
+    );
     const dppPPh21Group = 0.5 * totalInsentifTax;
     const pph21Group = Math.round(hitungPPh21Progresif(dppPPh21Group));
     const totalTransferTaxGroup = totalInsentifTax - pph21Group;
-    const totalTransferKtpGroup = insentifReal2 - totalInsentifTax;
+    // Total Transfer via Rek KTP = kumulatif Insentif Real Cara Ke-2
+    // dikurangi kumulatif Insentif Tax (per customer).
+    const totalTransferKtpGroup = totalInsentifReal2 - totalInsentifTax;
 
     indices.forEach((i, pos) => {
       data[i].pph21 = pph21Group;
