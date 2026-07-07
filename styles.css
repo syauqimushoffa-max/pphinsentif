@@ -267,6 +267,12 @@ tr:nth-child(even) {
   display: none;
 }
 
+.signature-box {
+  text-align: center;
+  font-size: 11px;
+  min-width: 220px;
+}
+
 @media (max-width: 640px) {
   header h1 {
     font-size: 19px;
@@ -306,6 +312,8 @@ tr:nth-child(even) {
     margin: 0;
     background: white;
     width: 100%;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .container {
@@ -317,12 +325,34 @@ tr:nth-child(even) {
     display: none !important;
   }
 
+  /* Kop surat cetak: dibuat rapi seperti kop resmi perusahaan */
   #printHeader {
     display: block !important;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
   }
 
+  #printHeader h2 {
+    color: var(--primary-color);
+    letter-spacing: 1.5px;
+    font-size: 18px;
+  }
+
+  #printHeader h3 {
+    color: var(--secondary-color);
+    font-size: 13px;
+  }
+
+  #printHeader p {
+    font-size: 10px;
+    color: #444;
+  }
+
+  /* Tanda tangan: hanya 1 blok, rata kanan */
   #printSignature {
-    display: block !important;
+    display: flex !important;
+    justify-content: flex-end;
+    margin-top: 30px;
     page-break-inside: avoid;
   }
 
@@ -337,6 +367,7 @@ tr:nth-child(even) {
     overflow: visible;
   }
 
+  /* Desain tabel saat print disamakan dengan tampilan di web */
   table {
     width: 100%;
     font-size: 9.5px;
@@ -349,6 +380,7 @@ tr:nth-child(even) {
   td {
     padding: 4px 5px;
     word-break: break-word;
+    border: 1px solid var(--border-color);
   }
 
   thead {
@@ -360,26 +392,32 @@ tr:nth-child(even) {
     page-break-after: auto;
   }
 
+  tr:nth-child(even) {
+    background-color: #f9fbfd !important;
+  }
+
   .total-row {
     page-break-inside: avoid;
+    background-color: #eaeded !important;
+  }
+
+  .highlight-green {
+    background-color: #e2efda !important;
+  }
+  .highlight-yellow {
+    background-color: #ffe699 !important;
+  }
+  .highlight-blue {
+    background-color: #d9e1f2 !important;
+  }
+  .highlight-orange {
+    background-color: #fce4d6 !important;
   }
 
   th {
-    background-color: #dddddd !important;
-    color: #000 !important;
+    background-color: var(--primary-color) !important;
+    color: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-  }
-
-  #printHeader h2 {
-    font-size: 18px;
-  }
-
-  #printHeader h3 {
-    font-size: 13px;
-  }
-
-  #printHeader p {
-    font-size: 10px;
   }
 }
