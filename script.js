@@ -330,7 +330,7 @@ function renderDetail() {
                 <td style="text-align:left;">${d.customer}</td>
                 <td style="text-align:left;">${d.bulan}</td>
                 <td>${formatIDR(d.totalInvoice)}</td>
-                <td style="text-align:center;">${d.tonase.toLocaleString("id-ID")} ton</td>
+                <td style="text-align:center;">${d.tonase.toLocaleString("id-ID")}</td>
                 <td>${formatIDR(d.dppInvoice)}</td>
                 <td style="text-align:center;">${(d.pctCara1 * 100).toFixed(2)}%</td>
                 <td>${formatIDR(d.insentifReal1)}</td>
