@@ -323,6 +323,7 @@ function renderDetail() {
                 <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferTax)}</td>
                 <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferKtp)}</td>
             `;
+      pph;
     }
 
     const tr = document.createElement("tr");
@@ -348,7 +349,7 @@ function renderDetail() {
   totalTr.innerHTML = `
             <td colspan="2" style="text-align:center;">TOTAL KESELURUHAN</td>
             <td>${formatIDR(totalInv_All)}</td>
-            <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")} ton</td>
+            <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")}</td>
             <td>${formatIDR(dppInv_All)}</td>
             <td>-</td>
             <td class="highlight-green">${formatIDR(insReal1_All)}</td>
