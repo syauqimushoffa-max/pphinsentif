@@ -436,7 +436,7 @@ function renderSummary() {
                 <td style="text-align:left;">${g.customer}</td>
                 <td style="text-align:center;">${g.bulanCount}</td>
                 <td>${formatIDR(g.totalInvoice)}</td>
-                <td style="text-align:center;">${g.tonase.toLocaleString("id-ID")} ton</td>
+                <td style="text-align:center;">${g.tonase.toLocaleString("id-ID")}</td>
                 <td>${formatIDR(g.dppInvoice)}</td>
                 <td>${formatIDR(g.insentifReal1)}</td>
                 <td>${formatIDR(g.insentifReal2)}</td>
@@ -454,7 +454,7 @@ function renderSummary() {
             <td style="text-align:center;">TOTAL KESELURUHAN</td>
             <td>-</td>
             <td>${formatIDR(totalInv_All)}</td>
-            <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")} ton</td>
+            <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")}</td>
             <td>${formatIDR(dppInv_All)}</td>
             <td class="highlight-green">${formatIDR(insReal1_All)}</td>
             <td class="highlight-green">${formatIDR(insReal2_All)}</td>
