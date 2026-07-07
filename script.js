@@ -323,7 +323,6 @@ function renderDetail() {
                 <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferTax)}</td>
                 <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferKtp)}</td>
             `;
-      pph;
     }
 
     const tr = document.createElement("tr");
