@@ -520,3 +520,30 @@ function printReport() {
 
   window.print();
 }
+
+// --- LOGIKA TOGGLE TEMA GELAP / TERANG ---
+function initTheme() {
+  const savedTheme = localStorage.getItem("theme") || "light";
+  document.documentElement.setAttribute("data-theme", savedTheme);
+
+  const btn = document.getElementById("themeToggleBtn");
+  if (btn) {
+    btn.innerText = savedTheme === "dark" ? "☀️ Mode Terang" : "🌙 Mode Gelap";
+  }
+}
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute("data-theme");
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+  document.documentElement.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
+
+  const btn = document.getElementById("themeToggleBtn");
+  if (btn) {
+    btn.innerText = newTheme === "dark" ? "☀️ Mode Terang" : "🌙 Mode Gelap";
+  }
+}
+
+// Jalankan inisialisasi tema saat script dimuat
+document.addEventListener("DOMContentLoaded", initTheme);
