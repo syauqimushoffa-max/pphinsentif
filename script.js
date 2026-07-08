@@ -42,9 +42,8 @@ function handleFile(e) {
 }
 
 function hitungPPh21Progresif(dppPPh21) {
-  let pph = 0;
-  let sisa = dppPPh21;
-
+  let pph = 0,
+    sisa = dppPPh21;
   if (sisa > 0) {
     let porsi = Math.min(sisa, 60000000);
     pph += porsi * 0.05;
@@ -68,7 +67,6 @@ function hitungPPh21Progresif(dppPPh21) {
   if (sisa > 0) {
     pph += sisa * 0.35;
   }
-
   return pph;
 }
 
@@ -81,16 +79,14 @@ function getFieldValue(row, targetName) {
 function parseNumberID(value) {
   if (typeof value === "number") return value;
   if (value === undefined || value === null) return 0;
-
-  let str = String(value).trim();
-  str = str.replace(/[^0-9,.\-]/g, "");
-
+  let str = String(value)
+    .trim()
+    .replace(/[^0-9,.\-]/g, "");
   if (str.includes(",") && str.includes(".")) {
     str = str.replace(/\./g, "").replace(",", ".");
   } else if (str.includes(",")) {
     str = str.replace(",", ".");
   }
-
   const num = parseFloat(str);
   return isNaN(num) ? 0 : num;
 }
@@ -106,19 +102,11 @@ function tonaseToPct(tonase) {
 }
 
 const TONASE_ELIGIBLE_MIN = 2000;
-
 let allData = [];
 let currentMode = "detail";
-let rawJsonRows = []; // Menyimpan raw data untuk re-proses dinamis
+let rawJsonRows = []; // Penyimpan data excel murni
 
 function toggleNpwpMode() {
-  const isNpwp = document.getElementById("statusNpwp").value === "npwp";
-  const rulesBox = document.getElementById("rulesBoxPajak");
-
-  if (rulesBox) {
-    rulesBox.style.display = isNpwp ? "block" : "none";
-  }
-
   if (rawJsonRows.length > 0) {
     prosesData(rawJsonRows);
   }
@@ -126,7 +114,6 @@ function toggleNpwpMode() {
 
 function computeRow(row) {
   const isNpwp = document.getElementById("statusNpwp").value === "npwp";
-
   const customer = getFieldValue(row, "Customer") || "-";
   const bulan = getFieldValue(row, "Bulan") || "-";
   const totalInvoice = parseNumberID(getFieldValue(row, "Total Invoice"));
@@ -135,15 +122,12 @@ function computeRow(row) {
   const dppInvoice = Math.round(totalInvoice * 0.900900900922559264);
   const pctCara1 = tonaseToPct(tonase);
   const insentifReal1 = totalInvoice * pctCara1;
-
   const pctCara2 = dppInvoice !== 0 ? insentifReal1 / dppInvoice : 0;
   const insentifReal2 = dppInvoice * pctCara2;
 
-  const pctTax = 0.01;
   const eligibleTax = tonase >= TONASE_ELIGIBLE_MIN;
-
-  const pctTaxDisplay = eligibleTax && isNpwp ? pctTax : 0;
-  const insentifTax = eligibleTax && isNpwp ? dppInvoice * pctTax : 0;
+  const pctTaxDisplay = eligibleTax && isNpwp ? 0.01 : 0;
+  const insentifTax = eligibleTax && isNpwp ? dppInvoice * 0.01 : 0;
 
   return {
     customer,
@@ -183,7 +167,6 @@ function sortByCustomerGroup(data) {
 function computeCustomerTax(data) {
   const isNpwp = document.getElementById("statusNpwp").value === "npwp";
   const groups = new Map();
-
   data.forEach((d, idx) => {
     if (!groups.has(d.customer)) groups.set(d.customer, []);
     groups.get(d.customer).push(idx);
@@ -199,9 +182,9 @@ function computeCustomerTax(data) {
       0,
     );
 
-    let pph21Group = 0;
-    let totalTransferTaxGroup = 0;
-    let totalTransferKtpGroup = 0;
+    let pph21Group = 0,
+      totalTransferTaxGroup = 0,
+      totalTransferKtpGroup = 0;
 
     if (isNpwp) {
       const dppPPh21Group = 0.5 * totalInsentifTax;
@@ -209,9 +192,7 @@ function computeCustomerTax(data) {
       totalTransferTaxGroup = totalInsentifTax - pph21Group;
       totalTransferKtpGroup = totalInsentifReal2 - totalInsentifTax;
     } else {
-      pph21Group = 0;
-      totalTransferTaxGroup = 0;
-      totalTransferKtpGroup = totalInsentifReal2; // Nilai KTP = Cara Ke-2 penuh jika non-npwp
+      totalTransferKtpGroup = totalInsentifReal2; // Jika Non-NPWP, Cara 2 ditransfer utuh ke KTP
     }
 
     indices.forEach((i, pos) => {
@@ -226,35 +207,21 @@ function computeCustomerTax(data) {
 
 function prosesData(rows) {
   rawJsonRows = rows;
-  if (rows.length === 0) {
-    alert("Data Excel kosong atau format tidak sesuai.");
-    return;
-  }
-
-  const tonaseMissing = getFieldValue(rows[0], "Tonase") === undefined;
-  if (tonaseMissing) {
-    alert('Kolom "Tonase" tidak ditemukan di file Excel Anda.');
-  }
+  if (rows.length === 0) return;
 
   let computed = rows.map(computeRow);
   computed = sortByCustomerGroup(computed);
   computeCustomerTax(computed);
   allData = computed;
 
-  updateTableHeaders();
-
-  document.getElementById("resultCard").style.display = "block";
-  document.getElementById("filterCustomer").value = "";
-  renderTable();
-}
-
-function updateTableHeaders() {
+  // Sembunyikan atau tampilkan header berpajak
   const isNpwp = document.getElementById("statusNpwp").value === "npwp";
-
-  // Sembunyikan atau tampilkan seluruh elemen header yang memuat class tax-header
   document.querySelectorAll(".tax-header").forEach((el) => {
     el.style.display = isNpwp ? "" : "none";
   });
+
+  document.getElementById("resultCard").style.display = "block";
+  renderTable();
 }
 
 function getFilteredData() {
@@ -320,55 +287,51 @@ function renderDetail() {
     }
 
     let mergedCells = "";
-    if (d._isGroupFirst && isNpwp) {
-      mergedCells = `
-                <td rowspan="${d._groupRowCount}">${formatIDR(d.pph21)}</td>
-                <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferTax)}</td>
-            `;
-    }
-
-    let mergedKtpCell = "";
     if (d._isGroupFirst) {
-      mergedKtpCell = `<td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferKtp)}</td>`;
+      if (isNpwp) {
+        mergedCells = `
+          <td rowspan="${d._groupRowCount}">${formatIDR(d.pph21)}</td>
+          <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferTax)}</td>
+        `;
+      }
+      mergedCells += `<td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferKtp)}</td>`;
     }
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-                <td style="text-align:left;">${d.customer}</td>
-                <td style="text-align:left;">${d.bulan}</td>
-                <td>${formatIDR(d.totalInvoice)}</td>
-                <td style="text-align:center;">${d.tonase.toLocaleString("id-ID")}</td>
-                <td>${formatIDR(d.dppInvoice)}</td>
-                <td style="text-align:center;">${(d.pctCara1 * 100).toFixed(2)}%</td>
-                <td>${formatIDR(d.insentifReal1)}</td>
-                <td style="text-align:center;">${(d.pctCara2 * 100).toFixed(2)}%</td>
-                <td>${formatIDR(d.insentifReal2)}</td>
-                ${isNpwp ? `<td style="text-align:center;">${(d.pctTax * 100).toFixed(2)}%</td><td>${formatIDR(d.insentifTax)}</td>` : ""}
-                ${mergedCells}
-                ${mergedKtpCell}
-            `;
+      <td style="text-align:left;">${d.customer}</td>
+      <td style="text-align:left;">${d.bulan}</td>
+      <td>${formatIDR(d.totalInvoice)}</td>
+      <td style="text-align:center;">${d.tonase.toLocaleString("id-ID")}</td>
+      <td>${formatIDR(d.dppInvoice)}</td>
+      <td style="text-align:center;">${(d.pctCara1 * 100).toFixed(2)}%</td>
+      <td>${formatIDR(d.insentifReal1)}</td>
+      <td style="text-align:center;">${(d.pctCara2 * 100).toFixed(2)}%</td>
+      <td>${formatIDR(d.insentifReal2)}</td>
+      ${isNpwp ? `<td style="text-align:center;">${(d.pctTax * 100).toFixed(2)}%</td><td>${formatIDR(d.insentifTax)}</td>` : ""}
+      ${mergedCells}
+    `;
     tbody.appendChild(tr);
   });
 
   const totalTr = document.createElement("tr");
   totalTr.className = "total-row";
   totalTr.innerHTML = `
-            <td colspan="2" style="text-align:center;">TOTAL KESELURUHAN</td>
-            <td>${formatIDR(totalInv_All)}</td>
-            <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")}</td>
-            <td>${formatIDR(dppInv_All)}</td>
-            <td>-</td>
-            <td class="highlight-green">${formatIDR(insReal1_All)}</td>
-            <td>-</td>
-            <td class="highlight-green">${formatIDR(insReal2_All)}</td>
-            ${isNpwp ? `<td>-</td><td>${formatIDR(insTax_All)}</td><td class="highlight-yellow">${formatIDR(pph21_All)}</td><td class="highlight-blue">${formatIDR(tfTax_All)}</td>` : ""}
-            <td class="highlight-orange">${formatIDR(tfKtp_All)}</td>
-        `;
+    <td colspan="2" style="text-align:center;">TOTAL KESELURUHAN</td>
+    <td>${formatIDR(totalInv_All)}</td>
+    <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")}</td>
+    <td>${formatIDR(dppInv_All)}</td>
+    <td>-</td>
+    <td class="highlight-green">${formatIDR(insReal1_All)}</td>
+    <td>-</td>
+    <td class="highlight-green">${formatIDR(insReal2_All)}</td>
+    ${isNpwp ? `<td>-</td><td>${formatIDR(insTax_All)}</td><td class="highlight-yellow">${formatIDR(pph21_All)}</td><td class="highlight-blue">${formatIDR(tfTax_All)}</td>` : ""}
+    <td class="highlight-orange">${formatIDR(tfKtp_All)}</td>
+  `;
   tbody.appendChild(totalTr);
 
   if (data.length === 0) {
-    const colSpanCount = isNpwp ? 14 : 10;
-    tbody.innerHTML = `<tr><td colspan="${colSpanCount}" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${isNpwp ? 14 : 10}" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
   }
 }
 
@@ -435,47 +398,41 @@ function renderSummary() {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-                <td style="text-align:left;">${g.customer}</td>
-                <td style="text-align:center;">${g.bulanCount}</td>
-                <td>${formatIDR(g.totalInvoice)}</td>
-                <td style="text-align:center;">${g.tonase.toLocaleString("id-ID")}</td>
-                <td>${formatIDR(g.dppInvoice)}</td>
-                <td>${formatIDR(g.insentifReal1)}</td>
-                <td>${formatIDR(g.insentifReal2)}</td>
-                ${isNpwp ? `<td>${formatIDR(g.insentifTax)}</td><td>${formatIDR(g.pph21)}</td><td>${formatIDR(g.totalTransferTax)}</td>` : ""}
-                <td>${formatIDR(g.totalTransferKtp)}</td>
-            `;
+      <td style="text-align:left;">${g.customer}</td>
+      <td style="text-align:center;">${g.bulanCount}</td>
+      <td>${formatIDR(g.totalInvoice)}</td>
+      <td style="text-align:center;">${g.tonase.toLocaleString("id-ID")}</td>
+      <td>${formatIDR(g.dppInvoice)}</td>
+      <td>${formatIDR(g.insentifReal1)}</td>
+      <td>${formatIDR(g.insentifReal2)}</td>
+      ${isNpwp ? `<td>${formatIDR(g.insentifTax)}</td><td>${formatIDR(g.pph21)}</td><td>${formatIDR(g.totalTransferTax)}</td>` : ""}
+      <td>${formatIDR(g.totalTransferKtp)}</td>
+    `;
     tbody.appendChild(tr);
   });
 
   const totalTr = document.createElement("tr");
   totalTr.className = "total-row";
   totalTr.innerHTML = `
-            <td style="text-align:center;">TOTAL KESELURUHAN</td>
-            <td>-</td>
-            <td>${formatIDR(totalInv_All)}</td>
-            <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")}</td>
-            <td>${formatIDR(dppInv_All)}</td>
-            <td class="highlight-green">${formatIDR(insReal1_All)}</td>
-            <td class="highlight-green">${formatIDR(insReal2_All)}</td>
-            ${isNpwp ? `<td>${formatIDR(insTax_All)}</td><td class="highlight-yellow">${formatIDR(pph21_All)}</td><td class="highlight-blue">${formatIDR(tfTax_All)}</td>` : ""}
-            <td class="highlight-orange">${formatIDR(tfKtp_All)}</td>
-        `;
+    <td style="text-align:center;">TOTAL KESELURUHAN</td>
+    <td>-</td>
+    <td>${formatIDR(totalInv_All)}</td>
+    <td style="text-align:center;">${tonase_All.toLocaleString("id-ID")}</td>
+    <td>${formatIDR(dppInv_All)}</td>
+    <td class="highlight-green">${formatIDR(insReal1_All)}</td>
+    <td class="highlight-green">${formatIDR(insReal2_All)}</td>
+    ${isNpwp ? `<td>${formatIDR(insTax_All)}</td><td class="highlight-yellow">${formatIDR(pph21_All)}</td><td class="highlight-blue">${formatIDR(tfTax_All)}</td>` : ""}
+    <td class="highlight-orange">${formatIDR(tfKtp_All)}</td>
+  `;
   tbody.appendChild(totalTr);
 
   if (groups.length === 0) {
-    const colSpanCount = isNpwp ? 11 : 8;
-    tbody.innerHTML = `<tr><td colspan="${colSpanCount}" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${isNpwp ? 11 : 8}" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
   }
 }
 
 function exportToExcel() {
-  if (allData.length === 0) {
-    alert(
-      "Belum ada data untuk diexport. Silakan unggah file Excel terlebih dahulu.",
-    );
-    return;
-  }
+  if (allData.length === 0) return;
   const tableId = currentMode === "detail" ? "detailTable" : "summaryTable";
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.table_to_sheet(document.getElementById(tableId));
@@ -484,66 +441,44 @@ function exportToExcel() {
     ws,
     currentMode === "detail" ? "Detail" : "Summary",
   );
-
-  const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10);
   XLSX.writeFile(
     wb,
-    `Laporan_Insentif_${currentMode === "detail" ? "Detail" : "Summary"}_${dateStr}.xlsx`,
+    `Laporan_Insentif_${currentMode}_${new Date().toISOString().slice(0, 10)}.xlsx`,
   );
 }
 
 function printReport() {
-  if (allData.length === 0) {
-    alert(
-      "Belum ada data untuk dicetak. Silakan unggah file Excel terlebih dahulu.",
-    );
-    return;
-  }
-  const now = new Date();
-  const dateStr = now.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-  document.getElementById("printDate").innerText = dateStr;
-
-  const isNpwp = document.getElementById("statusNpwp").value === "npwp";
-  const taxStatusText = isNpwp ? "NPWP (Kena Pajak)" : "Non-NPWP (Tanpa Pajak)";
+  if (allData.length === 0) return;
+  document.getElementById("printDate").innerText =
+    new Date().toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
   document.getElementById("printMode").innerText =
-    `${currentMode === "detail" ? "Detail" : "Summary"} [${taxStatusText}]`;
-
-  const filterVal = document.getElementById("filterCustomer").value.trim();
-  document.getElementById("printFilter").innerText = filterVal
-    ? filterVal
-    : "Semua";
-
+    currentMode === "detail" ? "Detail" : "Summary (per Customer)";
+  document.getElementById("printFilter").innerText =
+    document.getElementById("filterCustomer").value.trim() || "Semua";
   window.print();
 }
 
-// --- LOGIKA TOGGLE TEMA GELAP / TERANG ---
+// --- INITIALIZE THEME CONTROL ---
 function initTheme() {
   const savedTheme = localStorage.getItem("theme") || "light";
   document.documentElement.setAttribute("data-theme", savedTheme);
-
   const btn = document.getElementById("themeToggleBtn");
-  if (btn) {
+  if (btn)
     btn.innerText = savedTheme === "dark" ? "☀️ Mode Terang" : "🌙 Mode Gelap";
-  }
 }
 
 function toggleTheme() {
   const currentTheme = document.documentElement.getAttribute("data-theme");
   const newTheme = currentTheme === "dark" ? "light" : "dark";
-
   document.documentElement.setAttribute("data-theme", newTheme);
   localStorage.setItem("theme", newTheme);
-
   const btn = document.getElementById("themeToggleBtn");
-  if (btn) {
+  if (btn)
     btn.innerText = newTheme === "dark" ? "☀️ Mode Terang" : "🌙 Mode Gelap";
-  }
 }
 
-// Jalankan inisialisasi tema saat script dimuat
 document.addEventListener("DOMContentLoaded", initTheme);

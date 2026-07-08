@@ -9,20 +9,39 @@
   </head>
   <body>
     <div class="container">
-      <div class="container">
-  <div class="theme-toggle-container no-print" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-    <button id="themeToggleBtn" onclick="toggleTheme()" style="padding: 8px 14px; background: var(--primary-color); color: #fff; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: 0.2s;">
-      🌙 Mode Gelap
-    </button>
-  </div>
+      <div
+        class="theme-toggle-container no-print"
+        style="display: flex; justify-content: flex-end; margin-bottom: 10px">
+        <button
+          id="themeToggleBtn"
+          onclick="toggleTheme()"
+          style="
+            padding: 8px 14px;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+          ">
+          🌙 Mode Gelap
+        </button>
+      </div>
+
       <header>
         <h1>SISTEM KALKULATOR PPh 21 INSENTIF CUSTOMER</h1>
         <p>CV. Pangan Berkah Sentosa</p>
       </header>
 
       <div class="card no-print">
-        <h3>1. Unggah File Excel</h3>
-        <p style="font-size: 13px; color: #666; margin-bottom: 15px">
+        <h3>1. Unggah File Excel Anda</h3>
+        <p
+          style="
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+          ">
           Pastikan file Excel Anda memiliki kolom dengan header persis:
           <strong>Customer</strong>, <strong>Bulan</strong>,
           <strong>Total Invoice</strong>, dan <strong>Tonase</strong>.
@@ -48,13 +67,17 @@
             onchange="toggleNpwpMode()"
             style="
               padding: 8px 12px;
+              background: var(--card-background);
+              color: var(--text-color);
               border: 1px solid var(--border-color);
               border-radius: 4px;
               font-size: 14px;
               cursor: pointer;
             ">
-            <option value="npwp" selected>NPWP</option>
-            <option value="non-npwp">Non-NPWP</option>
+            <option value="npwp" selected>
+              Memiliki NPWP (Aktifkan Pajak)
+            </option>
+            <option value="non-npwp">Non-NPWP (Tanpa Perhitungan Pajak)</option>
           </select>
         </div>
 
@@ -76,7 +99,12 @@
             <li>> Rp 500 Juta s.d Rp 5 Miliar: 30%</li>
             <li>> Rp 5 Miliar: 35%</li>
           </ul>
-          <p style="margin-top: 8px; font-size: 12.5px; color: #8a6d3b">
+          <p
+            style="
+              margin-top: 8px;
+              font-size: 12.5px;
+              color: var(--text-muted);
+            ">
             Kolom PPh 21, Total Transfer Tax, dan Total Transfer via Rek KTP di
             tampilan Detail akan digabung (merge) per customer sesuai jumlah
             bulan datanya.
