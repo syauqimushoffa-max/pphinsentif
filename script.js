@@ -109,9 +109,8 @@ const TONASE_ELIGIBLE_MIN = 2000;
 
 let allData = [];
 let currentMode = "detail";
-let rawJsonRows = []; // Menyimpan raw data untuk re-proses jika toggle diganti
+let rawJsonRows = []; // Menyimpan raw data untuk re-proses dinamis
 
-// Fungsi pemicu saat Dropdown NPWP diubah
 function toggleNpwpMode() {
   const isNpwp = document.getElementById("statusNpwp").value === "npwp";
   const rulesBox = document.getElementById("rulesBoxPajak");
@@ -143,7 +142,6 @@ function computeRow(row) {
   const pctTax = 0.01;
   const eligibleTax = tonase >= TONASE_ELIGIBLE_MIN;
 
-  // Jika non-npwp, matikan perhitungan Insentif Tax (jadi 0)
   const pctTaxDisplay = eligibleTax && isNpwp ? pctTax : 0;
   const insentifTax = eligibleTax && isNpwp ? dppInvoice * pctTax : 0;
 
@@ -211,10 +209,9 @@ function computeCustomerTax(data) {
       totalTransferTaxGroup = totalInsentifTax - pph21Group;
       totalTransferKtpGroup = totalInsentifReal2 - totalInsentifTax;
     } else {
-      // Jika Non-NPWP, transfer KTP sama dengan total Cara Ke-2
       pph21Group = 0;
       totalTransferTaxGroup = 0;
-      totalTransferKtpGroup = totalInsentifReal2;
+      totalTransferKtpGroup = totalInsentifReal2; // Nilai KTP = Cara Ke-2 penuh jika non-npwp
     }
 
     indices.forEach((i, pos) => {
@@ -228,7 +225,7 @@ function computeCustomerTax(data) {
 }
 
 function prosesData(rows) {
-  rawJsonRows = rows; // Simpan data asli ke global variable
+  rawJsonRows = rows;
   if (rows.length === 0) {
     alert("Data Excel kosong atau format tidak sesuai.");
     return;
@@ -244,7 +241,6 @@ function prosesData(rows) {
   computeCustomerTax(computed);
   allData = computed;
 
-  // Sembunyikan atau Tampilkan header kolom berdasarkan status NPWP
   updateTableHeaders();
 
   document.getElementById("resultCard").style.display = "block";
@@ -255,54 +251,10 @@ function prosesData(rows) {
 function updateTableHeaders() {
   const isNpwp = document.getElementById("statusNpwp").value === "npwp";
 
-  // Update Detail Table Header
-  const detailTable = document.getElementById("detailTable");
-  const insentifTaxHeaderTh = detailTable.querySelector(
-    "thead tr:first-child th[colspan='2']:nth-child(5)",
-  );
-  const pph21Th = detailTable.querySelector(
-    "thead tr:first-child th:nth-last-child(3)",
-  );
-  const tfTaxTh = detailTable.querySelector(
-    "thead tr:first-child th:nth-last-child(2)",
-  );
-
-  // Ambil sub header (%) dan (Jumlah) milik Insentif Tax pada baris kedua
-  const subHeadersRow2 = detailTable.querySelectorAll(
-    "thead tr:nth-child(2) th",
-  );
-  const taxPctSubTh = subHeadersRow2[4];
-  const taxAmtSubTh = subHeadersRow2[5];
-
-  if (!isNpwp) {
-    if (insentifTaxHeaderTh) insentifTaxHeaderTh.style.display = "none";
-    if (taxPctSubTh) taxPctSubTh.style.display = "none";
-    if (taxAmtSubTh) taxAmtSubTh.style.display = "none";
-    if (pph21Th) pph21Th.style.display = "none";
-    if (tfTaxTh) tfTaxTh.style.display = "none";
-  } else {
-    if (insentifTaxHeaderTh) insentifTaxHeaderTh.style.display = "";
-    if (taxPctSubTh) taxPctSubTh.style.display = "";
-    if (taxAmtSubTh) taxAmtSubTh.style.display = "";
-    if (pph21Th) pph21Th.style.display = "";
-    if (tfTaxTh) tfTaxTh.style.display = "";
-  }
-
-  // Update Summary Table Header
-  const summaryTable = document.getElementById("summaryTable");
-  const sumInsentifTaxTh = summaryTable.querySelector("thead th:nth-child(8)");
-  const sumPph21Th = summaryTable.querySelector("thead th:nth-child(9)");
-  const sumTfTaxTh = summaryTable.querySelector("thead th:nth-child(10)");
-
-  if (!isNpwp) {
-    if (sumInsentifTaxTh) sumInsentifTaxTh.style.display = "none";
-    if (sumPph21Th) sumPph21Th.style.display = "none";
-    if (sumTfTaxTh) sumTfTaxTh.style.display = "none";
-  } else {
-    if (sumInsentifTaxTh) sumInsentifTaxTh.style.display = "";
-    if (sumPph21Th) sumPph21Th.style.display = "";
-    if (sumTfTaxTh) sumTfTaxTh.style.display = "";
-  }
+  // Sembunyikan atau tampilkan seluruh elemen header yang memuat class tax-header
+  document.querySelectorAll(".tax-header").forEach((el) => {
+    el.style.display = isNpwp ? "" : "none";
+  });
 }
 
 function getFilteredData() {

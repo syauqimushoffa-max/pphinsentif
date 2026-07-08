@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PPh 21 Insentif Customer</title>
     <link rel="stylesheet" href="styles.css" />
-    <!-- Menerapkan library SheetJS untuk membaca file Excel secara Client-Side -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body>
@@ -23,7 +22,39 @@
           <strong>Total Invoice</strong>, dan <strong>Tonase</strong>.
         </p>
 
-        <div class="rules-box">
+        <div
+          style="
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          ">
+          <label
+            style="
+              font-weight: 600;
+              font-size: 14px;
+              color: var(--secondary-color);
+            "
+            >Status Pajak Customer:</label
+          >
+          <select
+            id="statusNpwp"
+            onchange="toggleNpwpMode()"
+            style="
+              padding: 8px 12px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              font-size: 14px;
+              cursor: pointer;
+            ">
+            <option value="npwp" selected>
+              Memiliki NPWP (Aktifkan Pajak)
+            </option>
+            <option value="non-npwp">Non-NPWP (Tanpa Perhitungan Pajak)</option>
+          </select>
+        </div>
+
+        <div class="rules-box" id="rulesBoxPajak">
           <h4>Tarif Progresif PPh 21</h4>
           <p>
             PPh 21 dihitung <strong>kumulatif per Customer</strong> (bukan per
@@ -47,21 +78,6 @@
             bulan datanya.
           </p>
         </div>
-        <div class="card no-print">
-        <h3>1. Unggah File Excel Anda</h3>
-        <p style="font-size: 13px; color: #666; margin-bottom: 15px">
-          Pastikan file Excel Anda memiliki kolom dengan header persis:
-          <strong>Customer</strong>, <strong>Bulan</strong>,
-          <strong>Total Invoice</strong>, dan <strong>Tonase</strong>.
-        </p>
-
-        <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-          <label style="font-weight: 600; font-size: 14px; color: var(--secondary-color);">Status Pajak Customer:</label>
-          <select id="statusNpwp" onchange="toggleNpwpMode()" style="padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; cursor: pointer;">
-            <option value="npwp" selected>Memiliki NPWP (Aktifkan Pajak)</option>
-            <option value="non-npwp">Non-NPWP (Tanpa Perhitungan Pajak)</option>
-          </select>
-        </div>
 
         <div
           class="file-upload-box"
@@ -82,15 +98,9 @@
         </button>
       </div>
 
-      <!-- Kop surat, hanya tampil saat dicetak -->
       <div id="printHeader">
         <div
-          style="
-            text-align: center;
-
-            padding-bottom: 1px;
-            margin-bottom: 10px;
-          ">
+          style="text-align: center; padding-bottom: 1px; margin-bottom: 10px">
           <h2 style="letter-spacing: 1px; font-size: 18px; margin: 0">
             CV. PANGAN BERKAH SENTOSA
           </h2>
@@ -135,10 +145,6 @@
               placeholder="Cari nama customer..."
               oninput="renderTable()" />
           </div>
-        </div>
-
-        <div class="rules-box" id="rulesBoxPajak">
-          <h4>Tarif Progresif PPh 21</h4>
           <div class="toolbar-actions">
             <button class="btn btn-outline" onclick="exportToExcel()">
               Export ke Excel
@@ -149,7 +155,6 @@
           </div>
         </div>
 
-        <!-- Tampilan DETAIL -->
         <div id="detailView" class="table-responsive">
           <table id="detailTable">
             <thead>
@@ -161,9 +166,11 @@
                 <th rowspan="2">DPP Invoice<br />(90.09%)</th>
                 <th colspan="2">Cara Ke-1 (Dari Invoice)</th>
                 <th colspan="2">Cara Ke-2 (Dari DPP)</th>
-                <th colspan="2">Insentif Tax (1% dari DPP)</th>
-                <th rowspan="2">PPh 21<br />(Progresif)</th>
-                <th rowspan="2">Total Transfer<br />Tax</th>
+                <th colspan="2" class="tax-header">
+                  Insentif Tax (1% dari DPP)
+                </th>
+                <th rowspan="2" class="tax-header">PPh 21<br />(Progresif)</th>
+                <th rowspan="2" class="tax-header">Total Transfer<br />Tax</th>
                 <th rowspan="2">Total Transfer<br />via Rek KTP</th>
               </tr>
               <tr>
@@ -171,17 +178,14 @@
                 <th>Jumlah Real</th>
                 <th>%</th>
                 <th>Jumlah Real</th>
-                <th>%</th>
-                <th>Jumlah</th>
+                <th class="tax-header">%</th>
+                <th class="tax-header">Jumlah</th>
               </tr>
             </thead>
-            <tbody id="detailTableBody">
-              <!-- Data dimasukkan via JS -->
-            </tbody>
+            <tbody id="detailTableBody"></tbody>
           </table>
         </div>
 
-        <!-- Tampilan SUMMARY (per customer) -->
         <div id="summaryView" class="table-responsive" style="display: none">
           <table id="summaryTable">
             <thead>
@@ -193,19 +197,16 @@
                 <th>DPP Invoice</th>
                 <th>Insentif Real<br />(Cara Ke-1)</th>
                 <th>Insentif Real<br />(Cara Ke-2)</th>
-                <th>Insentif Tax<br />(1% dari DPP)</th>
-                <th>PPh 21<br />(Progresif)</th>
-                <th>Total Transfer<br />Tax</th>
+                <th class="tax-header">Insentif Tax<br />(1% dari DPP)</th>
+                <th class="tax-header">PPh 21<br />(Progresif)</th>
+                <th class="tax-header">Total Transfer<br />Tax</th>
                 <th>Total Transfer<br />via Rek KTP</th>
               </tr>
             </thead>
-            <tbody id="summaryTableBody">
-              <!-- Data dimasukkan via JS -->
-            </tbody>
+            <tbody id="summaryTableBody"></tbody>
           </table>
         </div>
 
-        <!-- Blok tanda tangan, hanya tampil saat dicetak (1 tanda tangan, rata kanan) -->
         <div id="printSignature">
           <div class="signature-box">
             Dibuat Oleh,<br /><br /><br />
