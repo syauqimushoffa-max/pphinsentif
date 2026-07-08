@@ -47,6 +47,21 @@
             bulan datanya.
           </p>
         </div>
+        <div class="card no-print">
+        <h3>1. Unggah File Excel Anda</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px">
+          Pastikan file Excel Anda memiliki kolom dengan header persis:
+          <strong>Customer</strong>, <strong>Bulan</strong>,
+          <strong>Total Invoice</strong>, dan <strong>Tonase</strong>.
+        </p>
+
+        <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+          <label style="font-weight: 600; font-size: 14px; color: var(--secondary-color);">Status Pajak Customer:</label>
+          <select id="statusNpwp" onchange="toggleNpwpMode()" style="padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; cursor: pointer;">
+            <option value="npwp" selected>Memiliki NPWP (Aktifkan Pajak)</option>
+            <option value="non-npwp">Non-NPWP (Tanpa Perhitungan Pajak)</option>
+          </select>
+        </div>
 
         <div
           class="file-upload-box"
@@ -120,22 +135,6 @@
               placeholder="Cari nama customer..."
               oninput="renderTable()" />
           </div>
-        </div>
-        
-<div class="card no-print">
-        <h3>1. Unggah File Excel Anda</h3>
-        <p style="font-size: 13px; color: #666; margin-bottom: 15px">
-          Pastikan file Excel Anda memiliki kolom dengan header persis:
-          <strong>Customer</strong>, <strong>Bulan</strong>,
-          <strong>Total Invoice</strong>, dan <strong>Tonase</strong>.
-        </p>
-
-        <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-          <label style="font-weight: 600; font-size: 14px; color: var(--secondary-color);">Status Pajak Customer:</label>
-          <select id="statusNpwp" onchange="toggleNpwpMode()" style="padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; cursor: pointer;">
-            <option value="npwp" selected>Memiliki NPWP (Aktifkan Pajak)</option>
-            <option value="non-npwp">Non-NPWP (Tanpa Perhitungan Pajak)</option>
-          </select>
         </div>
 
         <div class="rules-box" id="rulesBoxPajak">
