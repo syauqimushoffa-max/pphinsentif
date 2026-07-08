@@ -35,7 +35,6 @@ function handleFile(e) {
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
 
-    // Mengubah ke JSON array of objects
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
     prosesData(jsonData);
   };
@@ -73,27 +72,22 @@ function hitungPPh21Progresif(dppPPh21) {
   return pph;
 }
 
-// Mencari nama kolom di baris Excel secara fleksibel (tidak peduli huruf besar/kecil atau spasi ekstra)
 function getFieldValue(row, targetName) {
   const target = targetName.trim().toLowerCase();
   const key = Object.keys(row).find((k) => k.trim().toLowerCase() === target);
   return key !== undefined ? row[key] : undefined;
 }
 
-// Parsing angka yang mendukung format Indonesia (koma sebagai desimal, titik sebagai ribuan)
-// dan membuang satuan/teks tambahan seperti "ton" atau "Rp"
 function parseNumberID(value) {
   if (typeof value === "number") return value;
   if (value === undefined || value === null) return 0;
 
   let str = String(value).trim();
-  str = str.replace(/[^0-9,.\-]/g, ""); // buang semua kecuali angka, koma, titik, minus
+  str = str.replace(/[^0-9,.\-]/g, "");
 
   if (str.includes(",") && str.includes(".")) {
-    // Format Indonesia: titik = ribuan, koma = desimal -> "1.234,5"
     str = str.replace(/\./g, "").replace(",", ".");
   } else if (str.includes(",")) {
-    // Hanya koma -> anggap sebagai desimal -> "4,5"
     str = str.replace(",", ".");
   }
 
@@ -101,7 +95,6 @@ function parseNumberID(value) {
   return isNaN(num) ? 0 : num;
 }
 
-// Menentukan persentase Cara Ke-1 berdasarkan total tonase pembelian customer
 function tonaseToPct(tonase) {
   const t = parseFloat(tonase) || 0;
   if (t >= 10000) return 0.03;
@@ -112,15 +105,29 @@ function tonaseToPct(tonase) {
   return 0;
 }
 
-// Ambang batas tonase minimum agar berhak atas Insentif Tax (dan turunannya:
-// PPh 21, Total Transfer Tax, Total Transfer via Rek KTP). Satu konstanta ini
-// dipakai di seluruh perhitungan supaya tidak ada selisih logika antar field.
 const TONASE_ELIGIBLE_MIN = 2000;
 
 let allData = [];
 let currentMode = "detail";
+let rawJsonRows = []; // Menyimpan raw data untuk re-proses jika toggle diganti
+
+// Fungsi pemicu saat Dropdown NPWP diubah
+function toggleNpwpMode() {
+  const isNpwp = document.getElementById("statusNpwp").value === "npwp";
+  const rulesBox = document.getElementById("rulesBoxPajak");
+
+  if (rulesBox) {
+    rulesBox.style.display = isNpwp ? "block" : "none";
+  }
+
+  if (rawJsonRows.length > 0) {
+    prosesData(rawJsonRows);
+  }
+}
 
 function computeRow(row) {
+  const isNpwp = document.getElementById("statusNpwp").value === "npwp";
+
   const customer = getFieldValue(row, "Customer") || "-";
   const bulan = getFieldValue(row, "Bulan") || "-";
   const totalInvoice = parseNumberID(getFieldValue(row, "Total Invoice"));
@@ -134,14 +141,11 @@ function computeRow(row) {
   const insentifReal2 = dppInvoice * pctCara2;
 
   const pctTax = 0.01;
-
-  // Customer berhak atas insentif tax hanya jika tonase bulan tsb sudah
-  // mencapai TONASE_ELIGIBLE_MIN. Jika belum, Insentif Tax bulan itu = 0
-  // (otomatis tidak ikut menambah akumulasi PPh 21 milik customer tsb).
   const eligibleTax = tonase >= TONASE_ELIGIBLE_MIN;
 
-  const pctTaxDisplay = eligibleTax ? pctTax : 0;
-  const insentifTax = eligibleTax ? dppInvoice * pctTax : 0;
+  // Jika non-npwp, matikan perhitungan Insentif Tax (jadi 0)
+  const pctTaxDisplay = eligibleTax && isNpwp ? pctTax : 0;
+  const insentifTax = eligibleTax && isNpwp ? dppInvoice * pctTax : 0;
 
   return {
     customer,
@@ -155,9 +159,6 @@ function computeRow(row) {
     insentifReal2,
     pctTax: pctTaxDisplay,
     insentifTax,
-    // pph21, totalTransferTax, dan totalTransferKtp dihitung secara kumulatif
-    // per customer oleh computeCustomerTax() setelah semua baris diproses,
-    // jadi nilainya sementara diisi 0 dulu di sini.
     pph21: 0,
     totalTransferTax: 0,
     totalTransferKtp: 0,
@@ -166,10 +167,6 @@ function computeRow(row) {
   };
 }
 
-// Mengurutkan data supaya baris-baris milik customer yang sama berdekatan
-// (diperlukan agar sel PPh 21 / Total Transfer bisa digabung / rowspan di
-// tampilan Detail). Urutan customer mengikuti kemunculan pertama di Excel,
-// dan urutan bulan di dalam satu customer tetap sesuai urutan asli.
 function sortByCustomerGroup(data) {
   const order = [];
   const seen = new Set();
@@ -185,15 +182,10 @@ function sortByCustomerGroup(data) {
   );
 }
 
-// Menghitung PPh 21 secara KUMULATIF per customer:
-// 1. Insentif Tax dari seluruh bulan milik satu customer dijumlahkan dulu.
-// 2. DPP PPh 21 = 50% x total Insentif Tax kumulatif tsb.
-// 3. Tarif progresif dikenakan ke DPP tsb (bertingkat, sesuai lapisan tarif).
-// Hasil pph21 / totalTransferTax / totalTransferKtp akan SAMA untuk semua
-// baris/bulan milik customer yang sama, dan ditandai (_isGroupFirst,
-// _groupRowCount) supaya bisa digabung (merge) saat dirender.
 function computeCustomerTax(data) {
+  const isNpwp = document.getElementById("statusNpwp").value === "npwp";
   const groups = new Map();
+
   data.forEach((d, idx) => {
     if (!groups.has(d.customer)) groups.set(d.customer, []);
     groups.get(d.customer).push(idx);
@@ -208,12 +200,22 @@ function computeCustomerTax(data) {
       (sum, i) => sum + data[i].insentifReal2,
       0,
     );
-    const dppPPh21Group = 0.5 * totalInsentifTax;
-    const pph21Group = Math.round(hitungPPh21Progresif(dppPPh21Group));
-    const totalTransferTaxGroup = totalInsentifTax - pph21Group;
-    // Total Transfer via Rek KTP = kumulatif Insentif Real Cara Ke-2
-    // dikurangi kumulatif Insentif Tax (per customer).
-    const totalTransferKtpGroup = totalInsentifReal2 - totalInsentifTax;
+
+    let pph21Group = 0;
+    let totalTransferTaxGroup = 0;
+    let totalTransferKtpGroup = 0;
+
+    if (isNpwp) {
+      const dppPPh21Group = 0.5 * totalInsentifTax;
+      pph21Group = Math.round(hitungPPh21Progresif(dppPPh21Group));
+      totalTransferTaxGroup = totalInsentifTax - pph21Group;
+      totalTransferKtpGroup = totalInsentifReal2 - totalInsentifTax;
+    } else {
+      // Jika Non-NPWP, transfer KTP sama dengan total Cara Ke-2
+      pph21Group = 0;
+      totalTransferTaxGroup = 0;
+      totalTransferKtpGroup = totalInsentifReal2;
+    }
 
     indices.forEach((i, pos) => {
       data[i].pph21 = pph21Group;
@@ -226,6 +228,7 @@ function computeCustomerTax(data) {
 }
 
 function prosesData(rows) {
+  rawJsonRows = rows; // Simpan data asli ke global variable
   if (rows.length === 0) {
     alert("Data Excel kosong atau format tidak sesuai.");
     return;
@@ -233,9 +236,7 @@ function prosesData(rows) {
 
   const tonaseMissing = getFieldValue(rows[0], "Tonase") === undefined;
   if (tonaseMissing) {
-    alert(
-      'Kolom "Tonase" tidak ditemukan di file Excel Anda. Pastikan ada kolom dengan header persis "Tonase", jika tidak semua persentase Cara Ke-1 akan dihitung 0%.',
-    );
+    alert('Kolom "Tonase" tidak ditemukan di file Excel Anda.');
   }
 
   let computed = rows.map(computeRow);
@@ -243,9 +244,65 @@ function prosesData(rows) {
   computeCustomerTax(computed);
   allData = computed;
 
+  // Sembunyikan atau Tampilkan header kolom berdasarkan status NPWP
+  updateTableHeaders();
+
   document.getElementById("resultCard").style.display = "block";
   document.getElementById("filterCustomer").value = "";
   renderTable();
+}
+
+function updateTableHeaders() {
+  const isNpwp = document.getElementById("statusNpwp").value === "npwp";
+
+  // Update Detail Table Header
+  const detailTable = document.getElementById("detailTable");
+  const insentifTaxHeaderTh = detailTable.querySelector(
+    "thead tr:first-child th[colspan='2']:nth-child(5)",
+  );
+  const pph21Th = detailTable.querySelector(
+    "thead tr:first-child th:nth-last-child(3)",
+  );
+  const tfTaxTh = detailTable.querySelector(
+    "thead tr:first-child th:nth-last-child(2)",
+  );
+
+  // Ambil sub header (%) dan (Jumlah) milik Insentif Tax pada baris kedua
+  const subHeadersRow2 = detailTable.querySelectorAll(
+    "thead tr:nth-child(2) th",
+  );
+  const taxPctSubTh = subHeadersRow2[4];
+  const taxAmtSubTh = subHeadersRow2[5];
+
+  if (!isNpwp) {
+    if (insentifTaxHeaderTh) insentifTaxHeaderTh.style.display = "none";
+    if (taxPctSubTh) taxPctSubTh.style.display = "none";
+    if (taxAmtSubTh) taxAmtSubTh.style.display = "none";
+    if (pph21Th) pph21Th.style.display = "none";
+    if (tfTaxTh) tfTaxTh.style.display = "none";
+  } else {
+    if (insentifTaxHeaderTh) insentifTaxHeaderTh.style.display = "";
+    if (taxPctSubTh) taxPctSubTh.style.display = "";
+    if (taxAmtSubTh) taxAmtSubTh.style.display = "";
+    if (pph21Th) pph21Th.style.display = "";
+    if (tfTaxTh) tfTaxTh.style.display = "";
+  }
+
+  // Update Summary Table Header
+  const summaryTable = document.getElementById("summaryTable");
+  const sumInsentifTaxTh = summaryTable.querySelector("thead th:nth-child(8)");
+  const sumPph21Th = summaryTable.querySelector("thead th:nth-child(9)");
+  const sumTfTaxTh = summaryTable.querySelector("thead th:nth-child(10)");
+
+  if (!isNpwp) {
+    if (sumInsentifTaxTh) sumInsentifTaxTh.style.display = "none";
+    if (sumPph21Th) sumPph21Th.style.display = "none";
+    if (sumTfTaxTh) sumTfTaxTh.style.display = "none";
+  } else {
+    if (sumInsentifTaxTh) sumInsentifTaxTh.style.display = "";
+    if (sumPph21Th) sumPph21Th.style.display = "";
+    if (sumTfTaxTh) sumTfTaxTh.style.display = "";
+  }
 }
 
 function getFilteredData() {
@@ -281,6 +338,7 @@ function renderTable() {
 }
 
 function renderDetail() {
+  const isNpwp = document.getElementById("statusNpwp").value === "npwp";
   const tbody = document.getElementById("detailTableBody");
   tbody.innerHTML = "";
   const data = getFilteredData();
@@ -303,26 +361,23 @@ function renderDetail() {
     insTax_All += d.insentifTax;
     tonase_All += d.tonase;
 
-    // pph21 / totalTransferTax / totalTransferKtp adalah nilai KUMULATIF per
-    // customer (sama untuk setiap baris/bulan milik customer tsb), jadi hanya
-    // dihitung sekali per customer (saat baris pertama grup) supaya tidak
-    // dobel-hitung di total keseluruhan.
     if (d._isGroupFirst) {
       pph21_All += d.pph21;
       tfTax_All += d.totalTransferTax;
       tfKtp_All += d.totalTransferKtp;
     }
 
-    // Sel PPh 21 / Total Transfer Tax / Total Transfer via Rek KTP digabung
-    // (rowspan) sesuai jumlah bulan milik customer tsb. Hanya baris pertama
-    // dari grup customer yang merender ketiga sel ini.
     let mergedCells = "";
-    if (d._isGroupFirst) {
+    if (d._isGroupFirst && isNpwp) {
       mergedCells = `
                 <td rowspan="${d._groupRowCount}">${formatIDR(d.pph21)}</td>
                 <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferTax)}</td>
-                <td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferKtp)}</td>
             `;
+    }
+
+    let mergedKtpCell = "";
+    if (d._isGroupFirst) {
+      mergedKtpCell = `<td rowspan="${d._groupRowCount}">${formatIDR(d.totalTransferKtp)}</td>`;
     }
 
     const tr = document.createElement("tr");
@@ -336,9 +391,9 @@ function renderDetail() {
                 <td>${formatIDR(d.insentifReal1)}</td>
                 <td style="text-align:center;">${(d.pctCara2 * 100).toFixed(2)}%</td>
                 <td>${formatIDR(d.insentifReal2)}</td>
-                <td style="text-align:center;">${(d.pctTax * 100).toFixed(2)}%</td>
-                <td>${formatIDR(d.insentifTax)}</td>
+                ${isNpwp ? `<td style="text-align:center;">${(d.pctTax * 100).toFixed(2)}%</td><td>${formatIDR(d.insentifTax)}</td>` : ""}
                 ${mergedCells}
+                ${mergedKtpCell}
             `;
     tbody.appendChild(tr);
   });
@@ -354,16 +409,14 @@ function renderDetail() {
             <td class="highlight-green">${formatIDR(insReal1_All)}</td>
             <td>-</td>
             <td class="highlight-green">${formatIDR(insReal2_All)}</td>
-            <td>-</td>
-            <td>${formatIDR(insTax_All)}</td>
-            <td class="highlight-yellow">${formatIDR(pph21_All)}</td>
-            <td class="highlight-blue">${formatIDR(tfTax_All)}</td>
+            ${isNpwp ? `<td>-</td><td>${formatIDR(insTax_All)}</td><td class="highlight-yellow">${formatIDR(pph21_All)}</td><td class="highlight-blue">${formatIDR(tfTax_All)}</td>` : ""}
             <td class="highlight-orange">${formatIDR(tfKtp_All)}</td>
         `;
   tbody.appendChild(totalTr);
 
   if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
+    const colSpanCount = isNpwp ? 14 : 10;
+    tbody.innerHTML = `<tr><td colspan="${colSpanCount}" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
   }
 }
 
@@ -393,9 +446,6 @@ function groupByCustomer(data) {
     g.insentifReal1 += d.insentifReal1;
     g.insentifReal2 += d.insentifReal2;
     g.insentifTax += d.insentifTax;
-    // pph21 / totalTransferTax / totalTransferKtp sudah berupa nilai kumulatif
-    // per customer (dihitung sekali di computeCustomerTax), jadi cukup
-    // di-assign (bukan dijumlahkan per baris) supaya tidak dobel-hitung.
     g.pph21 = d.pph21;
     g.totalTransferTax = d.totalTransferTax;
     g.totalTransferKtp = d.totalTransferKtp;
@@ -404,6 +454,7 @@ function groupByCustomer(data) {
 }
 
 function renderSummary() {
+  const isNpwp = document.getElementById("statusNpwp").value === "npwp";
   const tbody = document.getElementById("summaryTableBody");
   tbody.innerHTML = "";
   const data = getFilteredData();
@@ -439,9 +490,7 @@ function renderSummary() {
                 <td>${formatIDR(g.dppInvoice)}</td>
                 <td>${formatIDR(g.insentifReal1)}</td>
                 <td>${formatIDR(g.insentifReal2)}</td>
-                <td>${formatIDR(g.insentifTax)}</td>
-                <td>${formatIDR(g.pph21)}</td>
-                <td>${formatIDR(g.totalTransferTax)}</td>
+                ${isNpwp ? `<td>${formatIDR(g.insentifTax)}</td><td>${formatIDR(g.pph21)}</td><td>${formatIDR(g.totalTransferTax)}</td>` : ""}
                 <td>${formatIDR(g.totalTransferKtp)}</td>
             `;
     tbody.appendChild(tr);
@@ -457,15 +506,14 @@ function renderSummary() {
             <td>${formatIDR(dppInv_All)}</td>
             <td class="highlight-green">${formatIDR(insReal1_All)}</td>
             <td class="highlight-green">${formatIDR(insReal2_All)}</td>
-            <td>${formatIDR(insTax_All)}</td>
-            <td class="highlight-yellow">${formatIDR(pph21_All)}</td>
-            <td class="highlight-blue">${formatIDR(tfTax_All)}</td>
+            ${isNpwp ? `<td>${formatIDR(insTax_All)}</td><td class="highlight-yellow">${formatIDR(pph21_All)}</td><td class="highlight-blue">${formatIDR(tfTax_All)}</td>` : ""}
             <td class="highlight-orange">${formatIDR(tfKtp_All)}</td>
         `;
   tbody.appendChild(totalTr);
 
   if (groups.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
+    const colSpanCount = isNpwp ? 11 : 8;
+    tbody.innerHTML = `<tr><td colspan="${colSpanCount}" style="text-align:center; color:#888;">Tidak ada data yang cocok dengan filter customer.</td></tr>`;
   }
 }
 
@@ -507,8 +555,12 @@ function printReport() {
     year: "numeric",
   });
   document.getElementById("printDate").innerText = dateStr;
+
+  const isNpwp = document.getElementById("statusNpwp").value === "npwp";
+  const taxStatusText = isNpwp ? "NPWP (Kena Pajak)" : "Non-NPWP (Tanpa Pajak)";
   document.getElementById("printMode").innerText =
-    currentMode === "detail" ? "Detail" : "Summary (per Customer)";
+    `${currentMode === "detail" ? "Detail" : "Summary"} [${taxStatusText}]`;
+
   const filterVal = document.getElementById("filterCustomer").value.trim();
   document.getElementById("printFilter").innerText = filterVal
     ? filterVal
